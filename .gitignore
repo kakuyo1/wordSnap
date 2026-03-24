@@ -1,0 +1,30 @@
+# Build outputs
+/build/
+/cmake-build-*/
+
+# CMake generated files
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/compile_commands.json
+/Makefile
+
+# IDE/editor
+/.qtcreator/
+*.pro.user
+*.user
+*.user.*
+/.idea/
+/.vscode/
+
+# OS artifacts
+Thumbs.db
+Desktop.ini
+
+# Logs/temp
+*.log
+*.tmp
+*.temp
+
+# Runtime lock
+wordSnapV1.lock
