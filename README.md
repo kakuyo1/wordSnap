@@ -16,7 +16,7 @@ Windows-only 离线托盘单词识别查词工具（V1）。
 
 - 已打通最小可运行闭环。
 - 可通过托盘菜单或全局热键触发截图识别。
-- 设置页尚未实现（托盘项为占位）。
+- 已提供设置对话框，可调整热键、显示模式、词典目录与 tessdata 目录。
 
 详见：`docs/requirements-status.md`。
 
@@ -70,7 +70,8 @@ cmake --build build
 ## 使用说明
 
 - 启动程序后常驻系统托盘。
-- 默认热键：`Ctrl+Alt+S`。
+- 默认热键：`Shift+Alt+S`（若注册失败会尝试回退到 `Ctrl+Alt+S`）。
+- 可通过托盘 `Settings` 修改热键与路径配置。
 - 按热键后框选目标区域，程序会自动 OCR + 查词。
 - 查询结果以 tooltip、卡片和托盘消息展示。
 
@@ -82,7 +83,6 @@ cmake --build build
 
 ## 后续计划
 
-- 增加 `SettingsDialog`。
 - 完善结果卡片字段（音标/词性等）。
 - 评估切换到 Tesseract C++ API。
 - 增强 StarDict 解析与压缩格式支持。

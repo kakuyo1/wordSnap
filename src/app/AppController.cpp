@@ -2,6 +2,7 @@
 
 #include <QCoreApplication>
 #include <QCursor>
+#include <QDialog>
 #include <QImage>
 #include <QStringList>
 #include <QToolTip>
@@ -15,6 +16,7 @@
 #include "services/WordNormalizer.h"
 #include "ui/CaptureOverlay.h"
 #include "ui/ResultCardWidget.h"
+#include "ui/SettingsDialog.h"
 #include "ui/TrayController.h"
 
 namespace {
@@ -242,9 +244,67 @@ void AppController::onCaptureCanceled() {
 }
 
 void AppController::onSettingsRequested() {
-    // Placeholder behavior before SettingsDialog is integrated.
+    SettingsDialog dialog(settings_);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const AppSettings requestedSettings = dialog.editedSettings();
+    AppSettings updatedSettings = settings_;
+    QString warningMessage;
+
+    const QString requestedHotkey = requestedSettings.hotkey.trimmed();
+    if (requestedHotkey.compare(settings_.hotkey, Qt::CaseInsensitive) != 0) {
+        QString hotkeyError;
+        if (hotkeyManager_->registerHotkey(requestedHotkey, &hotkeyError)) {
+            updatedSettings.hotkey = requestedHotkey;
+            trayController_->setHotkeyDisplay(updatedSettings.hotkey);
+        } else {
+            QString rollbackError;
+            hotkeyManager_->registerHotkey(settings_.hotkey, &rollbackError);
+            appendWarningMessage(
+                &warningMessage,
+                QStringLiteral("Hotkey was not updated: %1").arg(hotkeyError));
+        }
+    }
+
+    const QString defaultStarDictDir = QCoreApplication::applicationDirPath() + QStringLiteral("/dict");
+    QString requestedStarDictDir = requestedSettings.starDictDir.trimmed();
+    if (requestedStarDictDir.isEmpty()) {
+        requestedStarDictDir = defaultStarDictDir;
+    }
+    if (requestedStarDictDir != settings_.starDictDir) {
+        QString dictionaryError;
+        if (dictionaryService_->initialize(requestedStarDictDir, &dictionaryError)) {
+            updatedSettings.starDictDir = requestedStarDictDir;
+        } else {
+            QString rollbackError;
+            if (!settings_.starDictDir.isEmpty()) {
+                dictionaryService_->initialize(settings_.starDictDir, &rollbackError);
+            }
+            appendWarningMessage(
+                &warningMessage,
+                QStringLiteral("Dictionary path was not updated: %1").arg(dictionaryError));
+        }
+    }
+
+    updatedSettings.displayMode = requestedSettings.displayMode;
+    updatedSettings.tessdataDir = requestedSettings.tessdataDir.trimmed();
+
+    settings_ = updatedSettings;
+    settingsService_->save(settings_);
+
+    if (warningMessage.isEmpty()) {
+        trayController_->showInfo(
+            QStringLiteral("wordSnap V1"),
+            QStringLiteral("Settings saved."),
+            1500);
+        return;
+    }
+
+    QToolTip::showText(QCursor::pos(), warningMessage);
     trayController_->showInfo(
         QStringLiteral("wordSnap V1"),
-        QStringLiteral("Settings dialog will be added in the next phase."),
-        1800);
+        clampTrayMessage(warningMessage),
+        3200);
 }

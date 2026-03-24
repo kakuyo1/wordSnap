@@ -6,7 +6,7 @@
 
 - 搭建 Qt6 Widgets + C++17 + CMake 工程，主程序可构建并运行。
 - 实现单实例运行（`QLockFile`）。
-- 实现系统托盘常驻与菜单（Capture / Settings 占位 / Exit）。
+- 实现系统托盘常驻与菜单（Capture / Settings / Exit）。
 - 实现 Windows 全局热键（`RegisterHotKey`）并支持失败回退提示。
 - 实现全屏框选截图（覆盖层 + 鼠标框选 + 取消）。
 - 实现截图后 OCR 预处理（灰度、缩放、阈值）。
@@ -15,11 +15,11 @@
 - 实现 StarDict 最小可用查询（`.ifo + .idx + .dict`）。
 - 实现结果展示闭环（鼠标附近卡片 + tooltip + tray 消息）。
 - 实现启动配置读取（热键、显示模式、词典目录、tessdata 目录）。
+- 实现 `SettingsDialog`（热键、显示模式、词典目录、tessdata 目录可编辑并落盘）。
 - 增强 Tesseract 路径探测与错误提示（应用目录、环境变量、PATH、常见安装目录）。
 
 ## 未完成
 
-- `SettingsDialog` 交互界面尚未实现（目前仅托盘占位）。
 - 结果卡片信息尚未完善（音标 / 词性 / 词源折叠等）。
 - Tesseract 尚未切换到 C++ API（当前为 CLI，属于实现差异）。
 - StarDict 深度解析尚未完成（`sametypesequence` 精细字段处理）。
