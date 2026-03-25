@@ -5,7 +5,9 @@
 #include "app/AppTypes.h"
 
 class QComboBox;
+class QLabel;
 class QLineEdit;
+class QSlider;
 
 class SettingsDialog final : public QDialog {
     Q_OBJECT
@@ -21,10 +23,13 @@ protected:
 private slots:
     void browseStarDictDirectory();
     void browseTessdataDirectory();
+    void onResultCardOpacityChanged(int value);
 
 private:
     QLineEdit* hotkeyEdit_{nullptr};
     QComboBox* displayModeCombo_{nullptr};
     QLineEdit* starDictDirEdit_{nullptr};
     QLineEdit* tessdataDirEdit_{nullptr};
+    QSlider* resultCardOpacitySlider_{nullptr};
+    QLabel* resultCardOpacityValueLabel_{nullptr};
 };

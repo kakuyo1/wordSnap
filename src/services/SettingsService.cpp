@@ -11,6 +11,7 @@
  * DisplayMode=
  * StarDictDir=
  * TessdataDir=
+ * ResultCardOpacity=
  */
 namespace {
 constexpr auto kSettingsGroupGeneral = "general";
@@ -18,6 +19,7 @@ constexpr auto kKeyHotkey = "hotkey";
 constexpr auto kKeyDisplayMode = "display_mode";
 constexpr auto kKeyStarDictDir = "stardict_dir";
 constexpr auto kKeyTessdataDir = "tessdata_dir";
+constexpr auto kKeyResultCardOpacity = "result_card_opacity";
 } // namespace
 
 SettingsService::SettingsService(QString organizationName, QString applicationName)
@@ -50,6 +52,13 @@ AppSettings SettingsService::load() const {
     const QString defaultTessdataDir = QCoreApplication::applicationDirPath() + QStringLiteral("/tessdata");
     result.tessdataDir = settings.value(QString::fromLatin1(kKeyTessdataDir), defaultTessdataDir).toString().trimmed();
 
+    result.resultCardOpacityPercent = clampResultCardOpacityPercent(
+        settings
+            .value(
+                QString::fromLatin1(kKeyResultCardOpacity),
+                result.resultCardOpacityPercent)
+            .toInt());
+
     settings.endGroup();
     return result;
 }
@@ -62,6 +71,9 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.setValue(QString::fromLatin1(kKeyDisplayMode), displayModeToString(appSettings.displayMode));
     settings.setValue(QString::fromLatin1(kKeyStarDictDir), appSettings.starDictDir);
     settings.setValue(QString::fromLatin1(kKeyTessdataDir), appSettings.tessdataDir);
+    settings.setValue(
+        QString::fromLatin1(kKeyResultCardOpacity),
+        clampResultCardOpacityPercent(appSettings.resultCardOpacityPercent));
 
     settings.endGroup();
     settings.sync();

@@ -10,6 +10,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSlider>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -28,7 +29,9 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
       hotkeyEdit_(new QLineEdit(this)),
       displayModeCombo_(new QComboBox(this)),
       starDictDirEdit_(new QLineEdit(this)),
-      tessdataDirEdit_(new QLineEdit(this)) {
+      tessdataDirEdit_(new QLineEdit(this)),
+      resultCardOpacitySlider_(new QSlider(Qt::Horizontal, this)),
+      resultCardOpacityValueLabel_(new QLabel(this)) {
     setWindowTitle(QStringLiteral("wordSnap Settings"));
     setModal(true);
     resize(620, 0);
@@ -66,10 +69,28 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     tessdataDirLayout->addWidget(browseTessdataButton);
 
     auto* formLayout = new QFormLayout();
+
+    const int initialOpacity = clampResultCardOpacityPercent(initialSettings.resultCardOpacityPercent);
+    resultCardOpacitySlider_->setRange(kMinResultCardOpacityPercent, kMaxResultCardOpacityPercent);
+    resultCardOpacitySlider_->setSingleStep(1);
+    resultCardOpacitySlider_->setPageStep(5);
+    resultCardOpacitySlider_->setValue(initialOpacity);
+
+    resultCardOpacityValueLabel_->setMinimumWidth(52);
+    resultCardOpacityValueLabel_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    auto* opacityRow = new QWidget(this);
+    auto* opacityLayout = new QHBoxLayout(opacityRow);
+    opacityLayout->setContentsMargins(0, 0, 0, 0);
+    opacityLayout->setSpacing(10);
+    opacityLayout->addWidget(resultCardOpacitySlider_, 1);
+    opacityLayout->addWidget(resultCardOpacityValueLabel_);
+
     formLayout->addRow(QStringLiteral("Hotkey"), hotkeyEdit_);
     formLayout->addRow(QStringLiteral("Display mode"), displayModeCombo_);
     formLayout->addRow(QStringLiteral("StarDict folder"), starDictDirRow);
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
+    formLayout->addRow(QStringLiteral("Card opacity"), opacityRow);
 
     auto* hintLabel = new QLabel(
         QStringLiteral("Hotkey format examples: Shift+Alt+S, Ctrl+Alt+F2, Ctrl+Shift+Space"),
@@ -82,6 +103,9 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     connect(buttonBox, &QDialogButtonBox::rejected, this, &SettingsDialog::reject);
     connect(browseStarDictButton, &QPushButton::clicked, this, &SettingsDialog::browseStarDictDirectory);
     connect(browseTessdataButton, &QPushButton::clicked, this, &SettingsDialog::browseTessdataDirectory);
+    connect(resultCardOpacitySlider_, &QSlider::valueChanged, this, &SettingsDialog::onResultCardOpacityChanged);
+
+    onResultCardOpacityChanged(initialOpacity);
 
     auto* rootLayout = new QVBoxLayout(this);
     rootLayout->addLayout(formLayout);
@@ -95,6 +119,7 @@ AppSettings SettingsDialog::editedSettings() const {
     edited.displayMode = displayModeFromString(displayModeCombo_->currentData().toString());
     edited.starDictDir = QDir::fromNativeSeparators(starDictDirEdit_->text().trimmed());
     edited.tessdataDir = QDir::fromNativeSeparators(tessdataDirEdit_->text().trimmed());
+    edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());
     return edited;
 }
 
@@ -131,4 +156,9 @@ void SettingsDialog::browseTessdataDirectory() {
     if (!selectedDirectory.isEmpty()) {
         tessdataDirEdit_->setText(QDir::toNativeSeparators(selectedDirectory));
     }
+}
+
+void SettingsDialog::onResultCardOpacityChanged(const int value) {
+    const int clamped = clampResultCardOpacityPercent(value);
+    resultCardOpacityValueLabel_->setText(QStringLiteral("%1%").arg(clamped));
 }

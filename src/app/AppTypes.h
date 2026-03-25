@@ -10,6 +10,19 @@ enum class DisplayMode {
     Bilingual
 };
 
+constexpr int kMinResultCardOpacityPercent = 35;
+constexpr int kMaxResultCardOpacityPercent = 100;
+
+inline int clampResultCardOpacityPercent(const int value) {
+    if (value < kMinResultCardOpacityPercent) {
+        return kMinResultCardOpacityPercent;
+    }
+    if (value > kMaxResultCardOpacityPercent) {
+        return kMaxResultCardOpacityPercent;
+    }
+    return value;
+}
+
 // OCR output for a single-word recognition pipeline.
 struct OcrWordResult {
     QString rawText;
@@ -38,6 +51,7 @@ struct AppSettings {
     DisplayMode displayMode{DisplayMode::Bilingual};
     QString starDictDir;
     QString tessdataDir;
+    int resultCardOpacityPercent{92};
 };
 
 // Converts display mode enum to stable settings string.
