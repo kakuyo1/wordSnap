@@ -10,7 +10,8 @@
 - 结果卡片支持四种风格（Kraft paper / Glassmorphism / Terminal / Clay）与透明度设置。
 - 结果状态统一为 `FOUND` / `OCR_FAILED` / `UNKNOWN` / `DICT_UNAVAILABLE`，卡片与托盘文案保持一致。
 - 已支持查询历史 V1：本地 JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条限制（默认 300，可配置）。
-- 设置页可配置热键、显示模式、词典目录、tessdata 目录、卡片风格、历史条数上限。
+- 已支持 AI Assist（DeepSeek OpenAI-Compatible）：查词结果先展示基础词典，随后异步补充 `definition_en / roots / etymology`。
+- 设置页可配置热键、显示模式、词典目录、tessdata 目录、卡片风格、历史条数上限、AI 开关/API Key/Endpoint/Model/Timeout。
 - 启动时可自动探测 Tesseract 路径并给出可读错误提示。
 
 当前项目状态详见：`docs/requirements-status.md`。
@@ -19,6 +20,7 @@
 
 - C++17
 - Qt 6 Widgets
+- Qt 6 Network
 - CMake
 - Tesseract OCR（当前为 CLI 调用）
 - StarDict（当前支持 `.ifo + .idx + .dict`）
@@ -77,7 +79,8 @@ cmake --build build
 2. 默认热键为 `Shift+Alt+S`（失败时会尝试回退为 `Ctrl+Alt+S`）。
 3. 按热键后框选目标区域，系统自动执行 OCR + 查词。
 4. 查询结果会通过结果卡片、Tooltip、托盘消息呈现。
-5. 可在托盘 `Settings` 中调整主要参数。
+5. 若 AI Assist 已启用且配置有效，结果卡片底部会在基础结果后异步显示 AI 内容。
+6. 可在托盘 `Settings` 中调整主要参数。
 
 ## 7. 文档导航
 
@@ -114,6 +117,8 @@ wordSnapV1/
   - 检查 PATH、`TESSERACT_EXE`、`TESSERACT_PATH` 配置是否有效。
 - 热键无响应
   - 可能与其他程序冲突；请在设置中改为其他组合键。
+- AI 没有返回内容
+  - 程序会自动降级为基础查词，不会阻塞主流程；请检查 API Key、Endpoint、Model 是否有效。
 
 ## 10. 路线图概览
 

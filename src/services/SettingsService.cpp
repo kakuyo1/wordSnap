@@ -14,6 +14,11 @@
  * ResultCardOpacity=
  * ResultCardStyle=
  * QueryHistoryLimit=
+ * AiAssistEnabled=
+ * AiApiKey=
+ * AiBaseUrl=
+ * AiModel=
+ * AiTimeoutMs=
  */
 namespace {
 constexpr auto kSettingsGroupGeneral = "general";
@@ -24,6 +29,11 @@ constexpr auto kKeyTessdataDir = "tessdata_dir";
 constexpr auto kKeyResultCardOpacity = "result_card_opacity";
 constexpr auto kKeyResultCardStyle = "result_card_style";
 constexpr auto kKeyQueryHistoryLimit = "query_history_limit";
+constexpr auto kKeyAiAssistEnabled = "ai_assist_enabled";
+constexpr auto kKeyAiApiKey = "ai_api_key";
+constexpr auto kKeyAiBaseUrl = "ai_base_url";
+constexpr auto kKeyAiModel = "ai_model";
+constexpr auto kKeyAiTimeoutMs = "ai_timeout_ms";
 } // namespace
 
 SettingsService::SettingsService(QString organizationName, QString applicationName)
@@ -77,6 +87,44 @@ AppSettings SettingsService::load() const {
                 result.queryHistoryLimit)
             .toInt());
 
+    result.aiAssistEnabled = settings
+                                 .value(
+                                     QString::fromLatin1(kKeyAiAssistEnabled),
+                                     result.aiAssistEnabled)
+                                 .toBool();
+    result.aiApiKey = settings
+                          .value(
+                              QString::fromLatin1(kKeyAiApiKey),
+                              result.aiApiKey)
+                          .toString()
+                          .trimmed();
+    result.aiBaseUrl = settings
+                           .value(
+                               QString::fromLatin1(kKeyAiBaseUrl),
+                               result.aiBaseUrl)
+                           .toString()
+                           .trimmed();
+    if (result.aiBaseUrl.isEmpty()) {
+        result.aiBaseUrl = AppSettings{}.aiBaseUrl;
+    }
+
+    result.aiModel = settings
+                         .value(
+                             QString::fromLatin1(kKeyAiModel),
+                             result.aiModel)
+                         .toString()
+                         .trimmed();
+    if (result.aiModel.isEmpty()) {
+        result.aiModel = AppSettings{}.aiModel;
+    }
+
+    result.aiTimeoutMs = clampAiTimeoutMs(
+        settings
+            .value(
+                QString::fromLatin1(kKeyAiTimeoutMs),
+                result.aiTimeoutMs)
+            .toInt());
+
     settings.endGroup();
     return result;
 }
@@ -98,6 +146,21 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.setValue(
         QString::fromLatin1(kKeyQueryHistoryLimit),
         clampQueryHistoryLimit(appSettings.queryHistoryLimit));
+    settings.setValue(
+        QString::fromLatin1(kKeyAiAssistEnabled),
+        appSettings.aiAssistEnabled);
+    settings.setValue(
+        QString::fromLatin1(kKeyAiApiKey),
+        appSettings.aiApiKey.trimmed());
+    settings.setValue(
+        QString::fromLatin1(kKeyAiBaseUrl),
+        appSettings.aiBaseUrl.trimmed());
+    settings.setValue(
+        QString::fromLatin1(kKeyAiModel),
+        appSettings.aiModel.trimmed());
+    settings.setValue(
+        QString::fromLatin1(kKeyAiTimeoutMs),
+        clampAiTimeoutMs(appSettings.aiTimeoutMs));
 
     settings.endGroup();
     settings.sync();

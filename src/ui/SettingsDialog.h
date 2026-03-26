@@ -5,6 +5,7 @@
 #include "app/AppTypes.h"
 
 class QComboBox;
+class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QSlider;
@@ -25,6 +26,7 @@ private slots:
     void browseStarDictDirectory();
     void browseTessdataDirectory();
     void onResultCardOpacityChanged(int value);
+    void onAiAssistEnabledChanged(bool checked);
 
 private:
     QLineEdit* hotkeyEdit_{nullptr};
@@ -35,4 +37,9 @@ private:
     QSlider* resultCardOpacitySlider_{nullptr};
     QLabel* resultCardOpacityValueLabel_{nullptr};
     QSpinBox* queryHistoryLimitSpinBox_{nullptr};
+    QCheckBox* aiAssistEnabledCheckBox_{nullptr};
+    QLineEdit* aiApiKeyEdit_{nullptr};
+    QLineEdit* aiBaseUrlEdit_{nullptr};
+    QLineEdit* aiModelEdit_{nullptr};
+    QSpinBox* aiTimeoutSpinBox_{nullptr};
 };

@@ -12,7 +12,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Network)
 
 qt_standard_project_setup()
 
@@ -37,6 +37,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/services/QueryHistoryService.cpp
     src/services/SettingsService.h
     src/services/SettingsService.cpp
+    src/services/AiAssistService.h
+    src/services/AiAssistService.cpp
     src/services/PhoneticExtractor.h
     src/services/PhoneticExtractor.cpp
     src/services/StarDictBackend.h
@@ -63,6 +65,7 @@ target_link_libraries(wordSnapV1 PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
 )
 
 if (WIN32)

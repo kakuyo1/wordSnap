@@ -24,6 +24,9 @@ constexpr int kMaxResultCardOpacityPercent = 100;
 constexpr int kDefaultQueryHistoryLimit = 300;
 constexpr int kMinQueryHistoryLimit = 50;
 constexpr int kMaxQueryHistoryLimit = 2000;
+constexpr int kDefaultAiTimeoutMs = 8000;
+constexpr int kMinAiTimeoutMs = 1000;
+constexpr int kMaxAiTimeoutMs = 30000;
 
 inline int clampResultCardOpacityPercent(const int value) {
     if (value < kMinResultCardOpacityPercent) {
@@ -41,6 +44,16 @@ inline int clampQueryHistoryLimit(const int value) {
     }
     if (value > kMaxQueryHistoryLimit) {
         return kMaxQueryHistoryLimit;
+    }
+    return value;
+}
+
+inline int clampAiTimeoutMs(const int value) {
+    if (value < kMinAiTimeoutMs) {
+        return kMinAiTimeoutMs;
+    }
+    if (value > kMaxAiTimeoutMs) {
+        return kMaxAiTimeoutMs;
     }
     return value;
 }
@@ -67,6 +80,12 @@ struct DictionaryEntry {
     bool found{false};
 };
 
+struct AiAssistContent {
+    QString definitionEn;
+    QString roots;
+    QString etymology;
+};
+
 // Application-level persistent settings.
 struct AppSettings {
     QString hotkey{QStringLiteral("Shift+Alt+S")};
@@ -76,6 +95,11 @@ struct AppSettings {
     int resultCardOpacityPercent{92};
     ResultCardStyle resultCardStyle{ResultCardStyle::KraftPaper};
     int queryHistoryLimit{kDefaultQueryHistoryLimit};
+    bool aiAssistEnabled{false};
+    QString aiApiKey;
+    QString aiBaseUrl{QStringLiteral("https://api.deepseek.com/v1/chat/completions")};
+    QString aiModel{QStringLiteral("deepseek-chat")};
+    int aiTimeoutMs{kDefaultAiTimeoutMs};
 };
 
 // Converts display mode enum to stable settings string.

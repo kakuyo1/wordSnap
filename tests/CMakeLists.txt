@@ -13,6 +13,7 @@ function(add_wordsnap_test test_name)
         Qt6::Core
         Qt6::Gui
         Qt6::Test
+        Qt6::Network
     )
 
     add_test(NAME ${test_name} COMMAND ${test_name})
@@ -42,4 +43,9 @@ add_wordsnap_test(LookupCoordinatorTest
 add_wordsnap_test(QueryHistoryServiceTest
     QueryHistoryServiceTest.cpp
     ../src/services/QueryHistoryService.cpp
+)
+
+add_wordsnap_test(AiAssistServiceTest
+    AiAssistServiceTest.cpp
+    ../src/services/AiAssistService.cpp
 )

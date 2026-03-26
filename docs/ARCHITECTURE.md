@@ -30,6 +30,9 @@ flowchart LR
     AC --> RC[ResultCardWidget]
     AC --> TT[QToolTip]
     AC --> TC[TrayController]
+    AC --> AI[AiAssistService]
+    AI --> NET[QNetworkAccessManager]
+    NET --> DSAPI[(DeepSeek API)]
 
     AC --> SS[SettingsService]
     SS --> QS[(QSettings)]
@@ -62,6 +65,7 @@ flowchart TB
         S5[DictionaryService]
         S6[StarDictBackend]
         S7[SettingsService]
+        S8[AiAssistService]
     end
 
     subgraph PLAT[平台层 src/platform/win]
@@ -86,12 +90,14 @@ flowchart TB
     A1 --> S4
     A1 --> S5
     A1 --> S7
+    A1 --> S8
     A1 --> P1
 
     S5 --> S6
 
     S3 --> E2
     S6 --> E3
+    S8 --> E5[HTTP API]
     P1 --> E4
 
     UI --> E1
@@ -115,6 +121,7 @@ sequenceDiagram
     participant SB as StarDictBackend
     participant RC as ResultCardWidget
     participant TC as TrayController
+    participant AI as AiAssistService
 
     User->>GHM: 按下全局热键
     GHM->>AC: hotkeyPressed()
@@ -139,6 +146,10 @@ sequenceDiagram
 
     AC->>RC: showMessage(headword, body, phonetic, ...)
     AC->>TC: showInfo(...)
+    AC->>RC: showAiLoading()
+    AC->>AI: requestWordAssist(word)
+    AI-->>AC: structured result / error
+    AC->>RC: showAiContent(...) or showAiError(...)
 ```
 
 ## 5. 目标扩展架构（规划态）

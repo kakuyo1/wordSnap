@@ -22,6 +22,9 @@
 - 设置项新增 `ResultCardStyle` 与 `QueryHistoryLimit` 并持久化。
 - 新增查询历史 V1（JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条裁剪）。
 - 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest`。
+- 接入 AI Assist（DeepSeek OpenAI-Compatible）：设置页新增 AI 配置，启动校验无效配置并自动降级。
+- 查词流程改为“两阶段渲染”：先展示基础词典结果，再异步请求 AI 并在卡片底部回填。
+- 新增 `AiAssistServiceTest`，覆盖配置校验、结构化解析、字段长度约束与关闭态降级。
 
 ## 未完成
 

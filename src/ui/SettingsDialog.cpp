@@ -1,6 +1,7 @@
 #include "ui/SettingsDialog.h"
 
 #include <QComboBox>
+#include <QCheckBox>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFileDialog>
@@ -12,6 +13,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -34,7 +36,12 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
       resultCardStyleCombo_(new QComboBox(this)),
       resultCardOpacitySlider_(new QSlider(Qt::Horizontal, this)),
       resultCardOpacityValueLabel_(new QLabel(this)),
-      queryHistoryLimitSpinBox_(new QSpinBox(this)) {
+      queryHistoryLimitSpinBox_(new QSpinBox(this)),
+      aiAssistEnabledCheckBox_(new QCheckBox(this)),
+      aiApiKeyEdit_(new QLineEdit(this)),
+      aiBaseUrlEdit_(new QLineEdit(this)),
+      aiModelEdit_(new QLineEdit(this)),
+      aiTimeoutSpinBox_(new QSpinBox(this)) {
     setWindowTitle(QStringLiteral("wordSnap Settings"));
     setModal(true);
     resize(620, 0);
@@ -95,6 +102,23 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     queryHistoryLimitSpinBox_->setSingleStep(25);
     queryHistoryLimitSpinBox_->setValue(clampQueryHistoryLimit(initialSettings.queryHistoryLimit));
 
+    aiAssistEnabledCheckBox_->setChecked(initialSettings.aiAssistEnabled);
+
+    aiApiKeyEdit_->setText(initialSettings.aiApiKey);
+    aiApiKeyEdit_->setClearButtonEnabled(true);
+    aiApiKeyEdit_->setEchoMode(QLineEdit::PasswordEchoOnEdit);
+
+    aiBaseUrlEdit_->setText(initialSettings.aiBaseUrl);
+    aiBaseUrlEdit_->setClearButtonEnabled(true);
+
+    aiModelEdit_->setText(initialSettings.aiModel);
+    aiModelEdit_->setClearButtonEnabled(true);
+
+    aiTimeoutSpinBox_->setRange(kMinAiTimeoutMs, kMaxAiTimeoutMs);
+    aiTimeoutSpinBox_->setSingleStep(500);
+    aiTimeoutSpinBox_->setSuffix(QStringLiteral(" ms"));
+    aiTimeoutSpinBox_->setValue(clampAiTimeoutMs(initialSettings.aiTimeoutMs));
+
     auto* opacityRow = new QWidget(this);
     auto* opacityLayout = new QHBoxLayout(opacityRow);
     opacityLayout->setContentsMargins(0, 0, 0, 0);
@@ -109,6 +133,11 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
     formLayout->addRow(QStringLiteral("Card opacity"), opacityRow);
     formLayout->addRow(QStringLiteral("History size (N)"), queryHistoryLimitSpinBox_);
+    formLayout->addRow(QStringLiteral("Enable AI assist"), aiAssistEnabledCheckBox_);
+    formLayout->addRow(QStringLiteral("AI API key"), aiApiKeyEdit_);
+    formLayout->addRow(QStringLiteral("AI endpoint"), aiBaseUrlEdit_);
+    formLayout->addRow(QStringLiteral("AI model"), aiModelEdit_);
+    formLayout->addRow(QStringLiteral("AI timeout"), aiTimeoutSpinBox_);
 
     auto* hintLabel = new QLabel(
         QStringLiteral("Hotkey format examples: Shift+Alt+S, Ctrl+Alt+F2, Ctrl+Shift+Space"),
@@ -122,8 +151,10 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     connect(browseStarDictButton, &QPushButton::clicked, this, &SettingsDialog::browseStarDictDirectory);
     connect(browseTessdataButton, &QPushButton::clicked, this, &SettingsDialog::browseTessdataDirectory);
     connect(resultCardOpacitySlider_, &QSlider::valueChanged, this, &SettingsDialog::onResultCardOpacityChanged);
+    connect(aiAssistEnabledCheckBox_, &QCheckBox::toggled, this, &SettingsDialog::onAiAssistEnabledChanged);
 
     onResultCardOpacityChanged(initialOpacity);
+    onAiAssistEnabledChanged(initialSettings.aiAssistEnabled);
 
     auto* rootLayout = new QVBoxLayout(this);
     rootLayout->addLayout(formLayout);
@@ -140,6 +171,11 @@ AppSettings SettingsDialog::editedSettings() const {
     edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());
     edited.resultCardStyle = resultCardStyleFromString(resultCardStyleCombo_->currentData().toString());
     edited.queryHistoryLimit = clampQueryHistoryLimit(queryHistoryLimitSpinBox_->value());
+    edited.aiAssistEnabled = aiAssistEnabledCheckBox_->isChecked();
+    edited.aiApiKey = aiApiKeyEdit_->text().trimmed();
+    edited.aiBaseUrl = aiBaseUrlEdit_->text().trimmed();
+    edited.aiModel = aiModelEdit_->text().trimmed();
+    edited.aiTimeoutMs = clampAiTimeoutMs(aiTimeoutSpinBox_->value());
     return edited;
 }
 
@@ -151,6 +187,39 @@ void SettingsDialog::accept() {
             QStringLiteral("Hotkey cannot be empty."));
         hotkeyEdit_->setFocus();
         return;
+    }
+
+    if (aiAssistEnabledCheckBox_->isChecked()) {
+        if (aiApiKeyEdit_->text().trimmed().isEmpty()) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Invalid AI API key"),
+                QStringLiteral("AI API key cannot be empty when AI assist is enabled."));
+            aiApiKeyEdit_->setFocus();
+            return;
+        }
+
+        const QString endpoint = aiBaseUrlEdit_->text().trimmed();
+        const QUrl endpointUrl(endpoint);
+        const QString scheme = endpointUrl.scheme().toLower();
+        if (endpoint.isEmpty() || !endpointUrl.isValid()
+            || (scheme != QStringLiteral("https") && scheme != QStringLiteral("http"))) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Invalid AI endpoint"),
+                QStringLiteral("AI endpoint must be a valid HTTP or HTTPS URL."));
+            aiBaseUrlEdit_->setFocus();
+            return;
+        }
+
+        if (aiModelEdit_->text().trimmed().isEmpty()) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Invalid AI model"),
+                QStringLiteral("AI model cannot be empty when AI assist is enabled."));
+            aiModelEdit_->setFocus();
+            return;
+        }
     }
 
     QDialog::accept();
@@ -181,4 +250,11 @@ void SettingsDialog::browseTessdataDirectory() {
 void SettingsDialog::onResultCardOpacityChanged(const int value) {
     const int clamped = clampResultCardOpacityPercent(value);
     resultCardOpacityValueLabel_->setText(QStringLiteral("%1%").arg(clamped));
+}
+
+void SettingsDialog::onAiAssistEnabledChanged(const bool checked) {
+    aiApiKeyEdit_->setEnabled(checked);
+    aiBaseUrlEdit_->setEnabled(checked);
+    aiModelEdit_->setEnabled(checked);
+    aiTimeoutSpinBox_->setEnabled(checked);
 }

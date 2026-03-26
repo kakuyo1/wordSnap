@@ -8,6 +8,7 @@
 #include <QToolTip>
 
 #include "app/LookupCoordinator.h"
+#include "services/AiAssistService.h"
 #include "platform/win/GlobalHotkeyManager.h"
 #include "services/DictionaryService.h"
 #include "services/ImagePreprocessor.h"
@@ -57,6 +58,7 @@ AppController::AppController(QObject* parent)
       wordNormalizer_(std::make_unique<WordNormalizer>()),
       dictionaryService_(std::make_unique<DictionaryService>()),
       resultCardWidget_(std::make_unique<ResultCardWidget>()),
+      aiAssistService_(std::make_unique<AiAssistService>()),
       lookupCoordinator_(std::make_unique<LookupCoordinator>(LookupCoordinator::Dependencies{
           [this](const QRect& rect) {
               return screenCaptureService_->capture(rect);
@@ -109,6 +111,18 @@ bool AppController::initialize(QString* warningMessage) {
     resultCardWidget_->setCardStyle(settings_.resultCardStyle);
     if (queryHistoryService_ != nullptr) {
         queryHistoryService_->setMaxEntries(settings_.queryHistoryLimit);
+    }
+
+    if (aiAssistService_ != nullptr) {
+        const QString aiWarning = aiAssistService_->applySettings(settings_);
+        if (!aiWarning.isEmpty() && settings_.aiAssistEnabled) {
+            const QString warning = QStringLiteral("AI assist is unavailable: %1").arg(aiWarning);
+            appendWarningMessage(warningMessage, warning);
+            trayController_->showInfo(
+                QStringLiteral("wordSnap V1"),
+                clampTrayMessage(warning),
+                2200);
+        }
     }
 
     QString dictionaryError;
@@ -164,6 +178,9 @@ void AppController::onRegionSelected(const QRect& globalRect) {
         return;
     }
 
+    ++activeLookupToken_;
+    const int lookupToken = activeLookupToken_;
+
     const LookupCoordinator::Result result =
         lookupCoordinator_->run(globalRect, settings_.tessdataDir, settings_.displayMode);
 
@@ -184,6 +201,42 @@ void AppController::onRegionSelected(const QRect& globalRect) {
         result.cardTitle,
         result.cardBody,
         result.cardPhonetic);
+
+    if (result.status != LookupCoordinator::Status::Found || aiAssistService_ == nullptr || resultCardWidget_ == nullptr) {
+        return;
+    }
+
+    if (!settings_.aiAssistEnabled) {
+        return;
+    }
+
+    if (!aiAssistService_->isAvailable()) {
+        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
+        return;
+    }
+
+    QString aiWord = result.cardTitle.trimmed();
+    if (aiWord.isEmpty()) {
+        aiWord = result.queryWord.trimmed();
+    }
+    if (aiWord.isEmpty()) {
+        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
+        return;
+    }
+
+    resultCardWidget_->showAiLoading();
+    aiAssistService_->requestWordAssist(aiWord, [this, lookupToken](const AiAssistService::Result& aiResult) {
+        if (lookupToken != activeLookupToken_ || resultCardWidget_ == nullptr) {
+            return;
+        }
+
+        if (aiResult.status == AiAssistService::Result::Status::Success) {
+            resultCardWidget_->showAiContent(aiResult.content);
+            return;
+        }
+
+        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
+    });
 }
 
 void AppController::onCaptureCanceled() {
@@ -331,6 +384,11 @@ void AppController::onSettingsRequested() {
     updatedSettings.resultCardOpacityPercent = requestedSettings.resultCardOpacityPercent;
     updatedSettings.resultCardStyle = requestedSettings.resultCardStyle;
     updatedSettings.queryHistoryLimit = requestedSettings.queryHistoryLimit;
+    updatedSettings.aiAssistEnabled = requestedSettings.aiAssistEnabled;
+    updatedSettings.aiApiKey = requestedSettings.aiApiKey;
+    updatedSettings.aiBaseUrl = requestedSettings.aiBaseUrl;
+    updatedSettings.aiModel = requestedSettings.aiModel;
+    updatedSettings.aiTimeoutMs = requestedSettings.aiTimeoutMs;
 
     settings_ = updatedSettings;
     resultCardWidget_->setCardOpacityPercent(settings_.resultCardOpacityPercent);
@@ -338,6 +396,15 @@ void AppController::onSettingsRequested() {
     if (queryHistoryService_ != nullptr) {
         queryHistoryService_->setMaxEntries(settings_.queryHistoryLimit);
     }
+    if (aiAssistService_ != nullptr) {
+        const QString aiWarning = aiAssistService_->applySettings(settings_);
+        if (!aiWarning.isEmpty() && settings_.aiAssistEnabled) {
+            appendWarningMessage(
+                &warningMessage,
+                QStringLiteral("AI assist is unavailable: %1").arg(aiWarning));
+        }
+    }
+    ++activeLookupToken_;
     settingsService_->save(settings_);
 
     if (warningMessage.isEmpty()) {

@@ -10,6 +10,7 @@
 #include <QPoint>
 #include <QPropertyAnimation>
 #include <QScreen>
+#include <QStringList>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -51,6 +52,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
             "  font-size: 13px;"
             "  color: #403428;"
+            "}"
+            "QLabel#aiLabel {"
+            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
+            "  font-size: 12px;"
+            "  color: #5f4730;"
+            "  margin-top: 4px;"
+            "  padding-top: 6px;"
+            "  border-top: 1px solid rgba(181, 146, 108, 140);"
             "}");
     case ResultCardStyle::Glassmorphism:
         return QStringLiteral(
@@ -78,6 +87,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
             "  font-size: 13px;"
             "  color: #ecf6ff;"
+            "}"
+            "QLabel#aiLabel {"
+            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
+            "  font-size: 12px;"
+            "  color: rgba(229, 244, 255, 230);"
+            "  margin-top: 4px;"
+            "  padding-top: 6px;"
+            "  border-top: 1px solid rgba(190, 222, 246, 145);"
             "}");
     case ResultCardStyle::Terminal:
         return QStringLiteral(
@@ -105,6 +122,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  font-family: 'Consolas', 'Cascadia Mono', 'Courier New';"
             "  font-size: 13px;"
             "  color: #9dffb0;"
+            "}"
+            "QLabel#aiLabel {"
+            "  font-family: 'Consolas', 'Cascadia Mono', 'Courier New';"
+            "  font-size: 12px;"
+            "  color: #7de694;"
+            "  margin-top: 4px;"
+            "  padding-top: 6px;"
+            "  border-top: 1px solid rgba(82, 172, 107, 170);"
             "}");
     case ResultCardStyle::Clay:
         return QStringLiteral(
@@ -132,6 +157,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
             "  font-size: 13px;"
             "  color: #6d4b45;"
+            "}"
+            "QLabel#aiLabel {"
+            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
+            "  font-size: 12px;"
+            "  color: #8a5750;"
+            "  margin-top: 4px;"
+            "  padding-top: 6px;"
+            "  border-top: 1px solid rgba(217, 162, 151, 175);"
             "}");
     }
 
@@ -290,6 +323,13 @@ ResultCardWidget::ResultCardWidget(QWidget* parent)
     bodyLabel_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     bodyLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
+    aiLabel_ = new QLabel(this);
+    aiLabel_->setObjectName(QStringLiteral("aiLabel"));
+    aiLabel_->setWordWrap(true);
+    aiLabel_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    aiLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    aiLabel_->hide();
+
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(38, 30, 32, 26);
     root->setSpacing(8);
@@ -304,6 +344,7 @@ ResultCardWidget::ResultCardWidget(QWidget* parent)
 
     root->addLayout(titleLayout);
     root->addWidget(bodyLabel_);
+    root->addWidget(aiLabel_);
 
     setMinimumWidth(320);
     setMaximumWidth(500);
@@ -418,6 +459,11 @@ void ResultCardWidget::showMessage(const QString& statusCode,
         bodyLabel_->show();
     }
 
+    if (aiLabel_ != nullptr) {
+        aiLabel_->clear();
+        aiLabel_->hide();
+    }
+
     adjustSize();
 
     QScreen* screen = QGuiApplication::screenAt(anchorGlobalPos);
@@ -470,6 +516,58 @@ void ResultCardWidget::showMessage(const QString& statusCode,
     if (popInAnimation_ != nullptr) {
         popInAnimation_->start();
     }
+
+    if (autoHideTimer_ == nullptr) {
+        return;
+    }
+
+    lastAutoHideMs_ = autoHideMs;
+    autoHideTimer_->stop();
+    if (autoHideMs > 0) {
+        autoHideTimer_->start(autoHideMs);
+    }
+}
+
+void ResultCardWidget::showAiLoading() {
+    showAiText(QStringLiteral("AI Assist\n..."), std::max(lastAutoHideMs_, 9000));
+}
+
+void ResultCardWidget::showAiContent(const AiAssistContent& content) {
+    QStringList lines;
+    lines << QStringLiteral("AI Assist");
+
+    if (!content.definitionEn.trimmed().isEmpty()) {
+        lines << QStringLiteral("Definition: %1").arg(content.definitionEn.trimmed());
+    }
+    if (!content.roots.trimmed().isEmpty()) {
+        lines << QStringLiteral("Roots: %1").arg(content.roots.trimmed());
+    }
+    if (!content.etymology.trimmed().isEmpty()) {
+        lines << QStringLiteral("Etymology: %1").arg(content.etymology.trimmed());
+    }
+
+    if (lines.size() == 1) {
+        showAiError(QStringLiteral("AI output is empty."));
+        return;
+    }
+
+    showAiText(lines.join('\n'), 5200);
+}
+
+void ResultCardWidget::showAiError(const QString& message) {
+    const QString trimmed = message.trimmed();
+    const QString detail = trimmed.isEmpty() ? QStringLiteral("AI assist is unavailable.") : trimmed;
+    showAiText(QStringLiteral("AI Assist\n%1").arg(detail), 5000);
+}
+
+void ResultCardWidget::showAiText(const QString& text, const int autoHideMs) {
+    if (aiLabel_ == nullptr) {
+        return;
+    }
+
+    aiLabel_->setText(text.trimmed());
+    aiLabel_->show();
+    adjustSize();
 
     if (autoHideTimer_ == nullptr) {
         return;
