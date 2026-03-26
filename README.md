@@ -1,88 +1,124 @@
 # wordSnapV1
 
-Windows-only 离线托盘单词识别查词工具（V1）。
+`wordSnapV1` 是一个 Windows 优先的离线托盘取词工具（V1）。
 
-核心流程：全局热键触发截图框选 -> OCR -> 单词归一化 -> StarDict 查询 -> 鼠标附近结果卡片显示。
+核心链路：全局热键/托盘触发截图 -> OCR 识别 -> 单词归一化 -> StarDict 查词 -> 鼠标附近结果卡片展示。
 
-## 技术栈
+## 1. 当前能力
+
+- 已具备可运行闭环：托盘常驻、全局热键、框选截图、OCR、词典查询、结果展示。
+- 结果卡片支持“单词 + 音标 + 释义”展示，并支持透明度设置。
+- 设置页可配置热键、显示模式、词典目录、tessdata 目录。
+- 启动时可自动探测 Tesseract 路径并给出可读错误提示。
+
+当前项目状态详见：`docs/requirements-status.md`。
+
+## 2. 技术栈
 
 - C++17
 - Qt 6 Widgets
 - CMake
-- Tesseract OCR（当前通过 CLI 调用）
+- Tesseract OCR（当前为 CLI 调用）
 - StarDict（当前支持 `.ifo + .idx + .dict`）
 
-## 当前状态
+## 3. 环境要求
 
-- 已打通最小可运行闭环。
-- 可通过托盘菜单或全局热键触发截图识别。
-- 已提供设置对话框，可调整热键、显示模式、词典目录与 tessdata 目录。
+- Windows 10/11
+- CMake >= 3.21
+- Qt 6.5+（Core / Gui / Widgets）
+- C++17 编译器（MSVC 或 MinGW）
 
-详见：`docs/requirements-status.md`。
+## 4. 构建与运行
 
-## 目录结构
+### 4.1 使用多配置生成器（Visual Studio）
 
-```text
-wordSnapV1/
-  CMakeLists.txt
-  src/
-    app/
-    platform/win/
-    services/
-    ui/
-  docs/
-  scripts/
+```powershell
+cmake -S . -B build
+cmake --build build --config Debug
 ```
 
-## 构建
+运行：
 
-要求：
+```powershell
+.\build\Debug\wordSnapV1.exe
+```
 
-- Windows
-- CMake >= 3.21
-- Qt 6.5+（Core/Gui/Widgets）
-- 可用的 C++17 编译器（MSVC 或 MinGW）
-
-示例（PowerShell）：
+### 4.2 使用单配置生成器（Ninja）
 
 ```powershell
 cmake -S . -B build -G "Ninja"
 cmake --build build
 ```
 
-## 运行前准备
+运行产物通常位于 `build/` 目录。
 
-### 1) Tesseract
+## 5. 运行前准备
+
+### 5.1 安装与配置 Tesseract
 
 - 安装 Tesseract，并确保 `tesseract.exe` 可被程序发现。
-- 推荐方式：将 Tesseract 安装目录加入 PATH（不是 `tesseract.exe` 文件本身）。
+- 推荐将“安装目录”加入 PATH（不要只放 `tesseract.exe` 文件路径）。
 - 可选环境变量：
   - `TESSERACT_EXE`：直接指向 `tesseract.exe`
   - `TESSERACT_PATH`：可指向目录或 `tesseract.exe`
-- 若使用自定义 tessdata，可将 `eng.traineddata` 放在应用目录下 `tessdata/`，或在设置中配置路径。
+- 若使用自定义模型，请保证 `eng.traineddata` 可在配置的 `tessdata` 目录中找到。
 
-### 2) StarDict 词典
+### 5.2 准备 StarDict 词典
 
 - 默认读取应用目录下 `dict/`。
-- 当前仅支持未压缩文件组合：`xxx.ifo` + `xxx.idx` + `xxx.dict`。
-- 若只有 `.dict.dz`，请先解压为 `.dict`。
+- 当前支持：`xxx.ifo + xxx.idx + xxx.dict`。
+- 若只有 `.dict.dz`，需先解压为 `.dict`。
 
-## 使用说明
+## 6. 使用说明
 
-- 启动程序后常驻系统托盘。
-- 默认热键：`Shift+Alt+S`（若注册失败会尝试回退到 `Ctrl+Alt+S`）。
-- 可通过托盘 `Settings` 修改热键与路径配置。
-- 按热键后框选目标区域，程序会自动 OCR + 查词。
-- 查询结果以 tooltip、卡片和托盘消息展示。
+1. 启动程序后常驻系统托盘。
+2. 默认热键为 `Shift+Alt+S`（失败时会尝试回退为 `Ctrl+Alt+S`）。
+3. 按热键后框选目标区域，系统自动执行 OCR + 查词。
+4. 查询结果会通过结果卡片、Tooltip、托盘消息呈现。
+5. 可在托盘 `Settings` 中调整主要参数。
 
-## 常见问题
+## 7. 文档导航
 
-- `Dictionary unavailable`：检查 `dict/` 路径及词典文件完整性。
-- `Tesseract did not start`：检查 PATH、`TESSERACT_EXE`/`TESSERACT_PATH` 配置是否正确。
-- 热键无响应：确认未被其他程序占用；程序会尝试回退到 `Ctrl+Alt+S` 并提示。
+- `docs/TODOLIST.md`：原始待办清单。
+- `docs/PLAN.md`：可执行里程碑规划（已细化到验收标准）。
+- `docs/ARCHITECTURE.md`：项目整体架构与模块架构（Mermaid 图）。
+- `docs/requirements-status.md`：需求完成度对照。
+- `AGENTS.md`：面向编码 Agent 的协作规范。
 
-## 后续计划
+## 8. 目录结构
 
-- 完善结果卡片字段（音标/词性等）。
-- 评估切换到 Tesseract C++ API。
-- 增强 StarDict 解析与压缩格式支持。
+```text
+wordSnapV1/
+  CMakeLists.txt
+  AGENTS.md
+  README.md
+  src/
+    app/
+    platform/win/
+    services/
+    ui/
+  docs/
+    TODOLIST.md
+    PLAN.md
+    ARCHITECTURE.md
+    requirements-status.md
+```
+
+## 9. 常见问题
+
+- `Dictionary unavailable`
+  - 检查词典目录是否存在并包含完整的 `.ifo/.idx/.dict` 组合。
+- `Tesseract did not start`
+  - 检查 PATH、`TESSERACT_EXE`、`TESSERACT_PATH` 配置是否有效。
+- 热键无响应
+  - 可能与其他程序冲突；请在设置中改为其他组合键。
+
+## 10. 路线图概览
+
+- 建立自动化测试与 TDD 基线（优先级最高）。
+- 完善 ResultCard 风格和状态规范，增加查询历史功能。
+- 接入 DeepSeek（异步加载、失败降级、结构化输出）。
+- 提升 OCR 在游戏/网页场景下的鲁棒性。
+- 打通 `windeployqt + Inno Setup` 发布流程。
+
+详细计划请查看：`docs/PLAN.md`。

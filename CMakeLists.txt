@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 
 project(wordSnapV1 VERSION 0.1.0 LANGUAGES CXX)
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -31,6 +33,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/services/OcrService.cpp
     src/services/SettingsService.h
     src/services/SettingsService.cpp
+    src/services/PhoneticExtractor.h
+    src/services/PhoneticExtractor.cpp
     src/services/StarDictBackend.h
     src/services/StarDictBackend.cpp
     src/services/WordNormalizer.h
@@ -57,4 +61,9 @@ target_link_libraries(wordSnapV1 PRIVATE
 
 if (WIN32)
     target_link_libraries(wordSnapV1 PRIVATE user32)
+endif()
+
+if (BUILD_TESTING)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Test)
+    add_subdirectory(tests)
 endif()
