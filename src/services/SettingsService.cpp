@@ -12,6 +12,8 @@
  * StarDictDir=
  * TessdataDir=
  * ResultCardOpacity=
+ * ResultCardStyle=
+ * QueryHistoryLimit=
  */
 namespace {
 constexpr auto kSettingsGroupGeneral = "general";
@@ -20,6 +22,8 @@ constexpr auto kKeyDisplayMode = "display_mode";
 constexpr auto kKeyStarDictDir = "stardict_dir";
 constexpr auto kKeyTessdataDir = "tessdata_dir";
 constexpr auto kKeyResultCardOpacity = "result_card_opacity";
+constexpr auto kKeyResultCardStyle = "result_card_style";
+constexpr auto kKeyQueryHistoryLimit = "query_history_limit";
 } // namespace
 
 SettingsService::SettingsService(QString organizationName, QString applicationName)
@@ -59,6 +63,20 @@ AppSettings SettingsService::load() const {
                 result.resultCardOpacityPercent)
             .toInt());
 
+    const QString styleRaw = settings
+                                 .value(
+                                     QString::fromLatin1(kKeyResultCardStyle),
+                                     resultCardStyleToString(result.resultCardStyle))
+                                 .toString();
+    result.resultCardStyle = resultCardStyleFromString(styleRaw);
+
+    result.queryHistoryLimit = clampQueryHistoryLimit(
+        settings
+            .value(
+                QString::fromLatin1(kKeyQueryHistoryLimit),
+                result.queryHistoryLimit)
+            .toInt());
+
     settings.endGroup();
     return result;
 }
@@ -74,6 +92,12 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.setValue(
         QString::fromLatin1(kKeyResultCardOpacity),
         clampResultCardOpacityPercent(appSettings.resultCardOpacityPercent));
+    settings.setValue(
+        QString::fromLatin1(kKeyResultCardStyle),
+        resultCardStyleToString(appSettings.resultCardStyle));
+    settings.setValue(
+        QString::fromLatin1(kKeyQueryHistoryLimit),
+        clampQueryHistoryLimit(appSettings.queryHistoryLimit));
 
     settings.endGroup();
     settings.sync();

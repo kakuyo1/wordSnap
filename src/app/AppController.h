@@ -18,6 +18,8 @@ class DictionaryService;
 class TrayController;
 class ResultCardWidget;
 class SettingsService;
+class LookupCoordinator;
+class QueryHistoryService;
 
 // Coordinates startup and top-level flow between infrastructure modules.
 class AppController final : public QObject {
@@ -35,11 +37,20 @@ private slots:
     void onHotkeyPressed();
     void onRegionSelected(const QRect& globalRect);
     void onCaptureCanceled();
+    void onHistoryRequested();
     void onSettingsRequested();
 
 private:
+    void appendHistoryRecord(const QString& statusCode,
+                             const QString& queryWord,
+                             const QString& headword,
+                             const QString& preview,
+                             const QString& phonetic);
+    void showHistoryRecord(const QueryHistoryRecord& record);
+
     AppSettings settings_;
     std::unique_ptr<SettingsService> settingsService_;
+    std::unique_ptr<QueryHistoryService> queryHistoryService_;
     std::unique_ptr<TrayController> trayController_;
     std::unique_ptr<GlobalHotkeyManager> hotkeyManager_;
     std::unique_ptr<CaptureOverlay> captureOverlay_;
@@ -49,4 +60,5 @@ private:
     std::unique_ptr<WordNormalizer> wordNormalizer_;
     std::unique_ptr<DictionaryService> dictionaryService_;
     std::unique_ptr<ResultCardWidget> resultCardWidget_;
+    std::unique_ptr<LookupCoordinator> lookupCoordinator_;
 };

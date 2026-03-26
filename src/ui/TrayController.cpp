@@ -11,6 +11,7 @@ TrayController::TrayController(QObject* parent)
       trayIcon_(std::make_unique<QSystemTrayIcon>(this)),
       trayMenu_(std::make_unique<QMenu>()),
       captureAction_(trayMenu_->addAction(QStringLiteral("Capture Now"))),
+      historyAction_(trayMenu_->addAction(QStringLiteral("History"))),
       settingsAction_(trayMenu_->addAction(QStringLiteral("Settings"))),
       quitAction_(trayMenu_->addAction(QStringLiteral("Exit"))) {
     QIcon trayIcon = QIcon::fromTheme(QStringLiteral("accessories-dictionary"));
@@ -21,6 +22,7 @@ TrayController::TrayController(QObject* parent)
     trayIcon_->setContextMenu(trayMenu_.get());
 
     connect(captureAction_, &QAction::triggered, this, &TrayController::captureRequested);
+    connect(historyAction_, &QAction::triggered, this, &TrayController::historyRequested);
     connect(settingsAction_, &QAction::triggered, this, &TrayController::settingsRequested);
     connect(quitAction_, &QAction::triggered, this, &TrayController::quitRequested);
 }

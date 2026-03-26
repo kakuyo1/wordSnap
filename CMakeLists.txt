@@ -20,6 +20,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/main.cpp
     src/app/AppController.h
     src/app/AppController.cpp
+    src/app/LookupCoordinator.h
+    src/app/LookupCoordinator.cpp
     src/app/AppTypes.h
     src/platform/win/GlobalHotkeyManager.h
     src/platform/win/GlobalHotkeyManager.cpp
@@ -31,6 +33,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/services/ImagePreprocessor.cpp
     src/services/OcrService.h
     src/services/OcrService.cpp
+    src/services/QueryHistoryService.h
+    src/services/QueryHistoryService.cpp
     src/services/SettingsService.h
     src/services/SettingsService.cpp
     src/services/PhoneticExtractor.h
@@ -43,6 +47,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/ui/CaptureOverlay.cpp
     src/ui/ResultCardWidget.h
     src/ui/ResultCardWidget.cpp
+    src/ui/HistoryDialog.h
+    src/ui/HistoryDialog.cpp
     src/ui/SettingsDialog.h
     src/ui/SettingsDialog.cpp
     src/ui/TrayController.h

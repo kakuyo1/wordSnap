@@ -2,20 +2,22 @@
 
 #include <QCoreApplication>
 #include <QCursor>
+#include <QDateTime>
 #include <QDialog>
 #include <QImage>
-#include <QStringList>
 #include <QToolTip>
 
+#include "app/LookupCoordinator.h"
 #include "platform/win/GlobalHotkeyManager.h"
 #include "services/DictionaryService.h"
 #include "services/ImagePreprocessor.h"
 #include "services/OcrService.h"
-#include "services/PhoneticExtractor.h"
+#include "services/QueryHistoryService.h"
 #include "services/ScreenCaptureService.h"
 #include "services/SettingsService.h"
 #include "services/WordNormalizer.h"
 #include "ui/CaptureOverlay.h"
+#include "ui/HistoryDialog.h"
 #include "ui/ResultCardWidget.h"
 #include "ui/SettingsDialog.h"
 #include "ui/TrayController.h"
@@ -33,55 +35,6 @@ void appendWarningMessage(QString* warningMessage, const QString& warning) {
     }
 }
 
-QString firstNonEmpty(const QStringList& lines) {
-    for (const QString& line : lines) {
-        const QString trimmed = line.trimmed();
-        if (!trimmed.isEmpty()) {
-            return trimmed;
-        }
-    }
-    return {};
-}
-
-QString pickDefinitionPreview(const DictionaryEntry& entry, DisplayMode mode) {
-    if (mode == DisplayMode::Zh) {
-        QString preview = firstNonEmpty(entry.definitionsZh);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        preview = firstNonEmpty(entry.definitionsEn);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        return entry.rawHtml.simplified();
-    }
-
-    if (mode == DisplayMode::En) {
-        QString preview = firstNonEmpty(entry.definitionsEn);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        preview = firstNonEmpty(entry.definitionsZh);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        return entry.rawHtml.simplified();
-    }
-
-    const QString zh = firstNonEmpty(entry.definitionsZh);
-    const QString en = firstNonEmpty(entry.definitionsEn);
-    if (!zh.isEmpty() && !en.isEmpty()) {
-        return QStringLiteral("%1 | %2").arg(en, zh);
-    }
-    if (!en.isEmpty()) {
-        return en;
-    }
-    if (!zh.isEmpty()) {
-        return zh;
-    }
-    return entry.rawHtml.simplified();
-}
-
 QString clampTrayMessage(QString message, int maxChars = 180) {
     message = message.simplified();
     if (message.size() <= maxChars) {
@@ -94,6 +47,7 @@ QString clampTrayMessage(QString message, int maxChars = 180) {
 AppController::AppController(QObject* parent)
     : QObject(parent),
       settingsService_(std::make_unique<SettingsService>()),
+      queryHistoryService_(std::make_unique<QueryHistoryService>()),
       trayController_(std::make_unique<TrayController>(this)),
       hotkeyManager_(std::make_unique<GlobalHotkeyManager>(this)),
       captureOverlay_(std::make_unique<CaptureOverlay>()),
@@ -102,7 +56,30 @@ AppController::AppController(QObject* parent)
       ocrService_(std::make_unique<OcrService>()),
       wordNormalizer_(std::make_unique<WordNormalizer>()),
       dictionaryService_(std::make_unique<DictionaryService>()),
-      resultCardWidget_(std::make_unique<ResultCardWidget>()) {
+      resultCardWidget_(std::make_unique<ResultCardWidget>()),
+      lookupCoordinator_(std::make_unique<LookupCoordinator>(LookupCoordinator::Dependencies{
+          [this](const QRect& rect) {
+              return screenCaptureService_->capture(rect);
+          },
+          [this](const QImage& image) {
+              return imagePreprocessor_->preprocessForWordRecognition(image);
+          },
+          [this](const QImage& image, const QString& tessdataDir, QString* errorMessage) {
+              return ocrService_->recognizeSingleWord(image, tessdataDir, errorMessage);
+          },
+          [this](const QString& rawText) {
+              return wordNormalizer_->normalizeCandidate(rawText);
+          },
+          [this]() {
+              return dictionaryService_ != nullptr && dictionaryService_->isReady();
+          },
+          [this](const QString& normalizedWord) {
+              if (dictionaryService_ == nullptr) {
+                  return DictionaryEntry{};
+              }
+              return dictionaryService_->lookup(normalizedWord);
+          },
+      })) {
 }
 
 AppController::~AppController() = default;
@@ -118,6 +95,7 @@ bool AppController::initialize(QString* warningMessage) {
     settings_ = settingsService_->load();
 
     connect(trayController_.get(), &TrayController::captureRequested, this, &AppController::onHotkeyPressed);
+    connect(trayController_.get(), &TrayController::historyRequested, this, &AppController::onHistoryRequested);
     connect(trayController_.get(), &TrayController::settingsRequested, this, &AppController::onSettingsRequested);
     if (QCoreApplication::instance() != nullptr) {
         connect(trayController_.get(), &TrayController::quitRequested, QCoreApplication::instance(), &QCoreApplication::quit);
@@ -128,6 +106,10 @@ bool AppController::initialize(QString* warningMessage) {
 
     trayController_->initialize(settings_);
     resultCardWidget_->setCardOpacityPercent(settings_.resultCardOpacityPercent);
+    resultCardWidget_->setCardStyle(settings_.resultCardStyle);
+    if (queryHistoryService_ != nullptr) {
+        queryHistoryService_->setMaxEntries(settings_.queryHistoryLimit);
+    }
 
     QString dictionaryError;
     if (!dictionaryService_->initialize(settings_.starDictDir, &dictionaryError)) {
@@ -178,109 +160,125 @@ void AppController::onHotkeyPressed() {
 }
 
 void AppController::onRegionSelected(const QRect& globalRect) {
-    const QImage captured = screenCaptureService_->capture(globalRect);
-    if (captured.isNull()) {
-        const QString message = QStringLiteral("Capture failed. Please try again.");
-        QToolTip::showText(QCursor::pos(), message);
-        resultCardWidget_->showMessage(
-            QStringLiteral("wordSnap V1"),
-            message,
-            QString(),
-            QCursor::pos(),
-            2200);
-        trayController_->showInfo(
-            QStringLiteral("wordSnap V1"),
-            message,
-            1400);
+    if (lookupCoordinator_ == nullptr) {
         return;
     }
 
-    const QImage preprocessed = imagePreprocessor_->preprocessForWordRecognition(captured);
-    QString ocrError;
-    OcrWordResult ocrResult = ocrService_->recognizeSingleWord(preprocessed, settings_.tessdataDir, &ocrError);
-    if (!ocrResult.success) {
-        const QString message = ocrError.isEmpty()
-                                    ? QStringLiteral("OCR failed. Ensure Tesseract is installed.")
-                                    : QStringLiteral("OCR failed: %1").arg(ocrError);
-        QToolTip::showText(QCursor::pos(), message);
-        resultCardWidget_->showMessage(
-            QStringLiteral("wordSnap V1"),
-            message,
-            QString(),
-            QCursor::pos(),
-            2600);
-        trayController_->showInfo(QStringLiteral("wordSnap V1"), message, 2200);
-        return;
-    }
+    const LookupCoordinator::Result result =
+        lookupCoordinator_->run(globalRect, settings_.tessdataDir, settings_.displayMode);
 
-    ocrResult.normalizedText = wordNormalizer_->normalizeCandidate(ocrResult.rawText);
-    if (ocrResult.normalizedText.isEmpty()) {
-        const QString message = QStringLiteral("OCR text is not a valid word candidate.");
-        QToolTip::showText(QCursor::pos(), message);
-        resultCardWidget_->showMessage(
-            QStringLiteral("wordSnap V1"),
-            message,
-            QString(),
-            QCursor::pos(),
-            2200);
-        trayController_->showInfo(
-            QStringLiteral("wordSnap V1"),
-            QStringLiteral("OCR succeeded, but no valid word token was found."),
-            1700);
-        return;
-    }
+    const QPoint anchorPos = QCursor::pos();
+    QToolTip::showText(anchorPos, result.tooltipText);
+    resultCardWidget_->showMessage(
+        result.statusCode,
+        result.cardTitle,
+        result.cardBody,
+        result.cardPhonetic,
+        anchorPos,
+        result.cardTimeoutMs);
+    trayController_->showInfo(QStringLiteral("wordSnap V1"), result.trayMessage, result.trayTimeoutMs);
 
-    DictionaryEntry entry;
-    if (dictionaryService_ != nullptr && dictionaryService_->isReady()) {
-        entry = dictionaryService_->lookup(ocrResult.normalizedText);
-    }
-
-    if (!entry.found) {
-        const QString message = dictionaryService_->isReady()
-                                    ? QStringLiteral("OCR: %1 (no dictionary entry)").arg(ocrResult.normalizedText)
-                                    : QStringLiteral("OCR: %1 (dictionary unavailable)").arg(ocrResult.normalizedText);
-        QToolTip::showText(QCursor::pos(), message);
-        resultCardWidget_->showMessage(
-            QStringLiteral("OCR"),
-            ocrResult.normalizedText,
-            QString(),
-            QCursor::pos(),
-            2800);
-        trayController_->showInfo(QStringLiteral("wordSnap V1"), message, 1600);
-        return;
-    }
-
-    const QString headword = entry.headword.isEmpty() ? ocrResult.normalizedText : entry.headword;
-    QString preview = pickDefinitionPreview(entry, settings_.displayMode);
-    QString phonetic = PhoneticExtractor::pickPrimaryPhonetic(entry);
-
-    QString extractedPhonetic;
-    QString strippedPreview;
-    if (PhoneticExtractor::extractInlinePhonetic(preview, &extractedPhonetic, &strippedPreview)) {
-        if (phonetic.isEmpty()) {
-            phonetic = extractedPhonetic;
-        }
-        preview = strippedPreview;
-    }
-
-    if (phonetic.isEmpty()) {
-        QString rawExtractedPhonetic;
-        QString ignored;
-        if (PhoneticExtractor::extractInlinePhonetic(entry.rawHtml, &rawExtractedPhonetic, &ignored)) {
-            phonetic = rawExtractedPhonetic;
-        }
-    }
-    const QString tooltipText = preview.isEmpty()
-                                     ? headword
-                                     : QStringLiteral("%1\n%2").arg(headword, preview);
-
-    QToolTip::showText(QCursor::pos(), tooltipText);
-    resultCardWidget_->showMessage(headword, preview, phonetic, QCursor::pos(), 5000);
-    trayController_->showInfo(QStringLiteral("wordSnap V1"), clampTrayMessage(tooltipText), 2500);
+    appendHistoryRecord(
+        result.statusCode,
+        result.queryWord,
+        result.cardTitle,
+        result.cardBody,
+        result.cardPhonetic);
 }
 
 void AppController::onCaptureCanceled() {
     QToolTip::showText(QCursor::pos(), QStringLiteral("Capture canceled"));
+}
+
+void AppController::onHistoryRequested() {
+    if (queryHistoryService_ == nullptr) {
+        return;
+    }
+
+    QString loadError;
+    const QVector<QueryHistoryRecord> records = queryHistoryService_->loadRecent(settings_.queryHistoryLimit, &loadError);
+    if (!loadError.isEmpty()) {
+        trayController_->showInfo(
+            QStringLiteral("wordSnap V1"),
+            clampTrayMessage(QStringLiteral("History load warning: %1").arg(loadError)),
+            2600);
+    }
+
+    HistoryDialog dialog(records);
+    const int dialogResult = dialog.exec();
+
+    if (dialog.clearRequested()) {
+        QString clearError;
+        if (queryHistoryService_->clear(&clearError)) {
+            trayController_->showInfo(
+                QStringLiteral("wordSnap V1"),
+                QStringLiteral("History cleared."),
+                1600);
+        } else {
+            const QString warning = QStringLiteral("History clear failed: %1").arg(clearError);
+            QToolTip::showText(QCursor::pos(), warning);
+            trayController_->showInfo(QStringLiteral("wordSnap V1"), clampTrayMessage(warning), 2600);
+        }
+    }
+
+    if (dialogResult == QDialog::Accepted && dialog.hasReviewSelection()) {
+        showHistoryRecord(dialog.reviewSelection());
+    }
+}
+
+void AppController::appendHistoryRecord(const QString& statusCode,
+                                        const QString& queryWord,
+                                        const QString& headword,
+                                        const QString& preview,
+                                        const QString& phonetic) {
+    if (queryHistoryService_ == nullptr) {
+        return;
+    }
+
+    QueryHistoryRecord record;
+    record.timestampUtc = QDateTime::currentDateTimeUtc();
+    record.statusCode = statusCode;
+    record.queryWord = queryWord;
+    record.headword = headword;
+    record.preview = preview;
+    record.phonetic = phonetic;
+
+    QString historyError;
+    if (!queryHistoryService_->append(record, &historyError) && !historyError.isEmpty()) {
+        trayController_->showInfo(
+            QStringLiteral("wordSnap V1"),
+            clampTrayMessage(QStringLiteral("History save warning: %1").arg(historyError)),
+            2200);
+    }
+}
+
+void AppController::showHistoryRecord(const QueryHistoryRecord& record) {
+    const QString statusCode = record.statusCode.trimmed().toUpper();
+    const QString headword = record.headword.trimmed();
+    const QString queryWord = record.queryWord.trimmed();
+    const QString displayWord = headword.isEmpty() ? queryWord : headword;
+    const QString preview = record.preview.trimmed();
+
+    QString tooltip = statusCode;
+    if (!displayWord.isEmpty()) {
+        tooltip += QStringLiteral("\n") + displayWord;
+    }
+    if (!preview.isEmpty()) {
+        tooltip += QStringLiteral("\n") + preview;
+    }
+
+    const QPoint anchorPos = QCursor::pos();
+    QToolTip::showText(anchorPos, tooltip);
+    resultCardWidget_->showMessage(statusCode, displayWord, preview, record.phonetic, anchorPos, 4200);
+
+    QString trayMessage = statusCode;
+    if (!displayWord.isEmpty()) {
+        trayMessage += QStringLiteral(" | ") + displayWord;
+    }
+    if (!preview.isEmpty()) {
+        trayMessage += QStringLiteral(" | ") + preview;
+    }
+    trayController_->showInfo(QStringLiteral("wordSnap V1"), clampTrayMessage(trayMessage), 2200);
 }
 
 void AppController::onSettingsRequested() {
@@ -331,9 +329,15 @@ void AppController::onSettingsRequested() {
     updatedSettings.displayMode = requestedSettings.displayMode;
     updatedSettings.tessdataDir = requestedSettings.tessdataDir.trimmed();
     updatedSettings.resultCardOpacityPercent = requestedSettings.resultCardOpacityPercent;
+    updatedSettings.resultCardStyle = requestedSettings.resultCardStyle;
+    updatedSettings.queryHistoryLimit = requestedSettings.queryHistoryLimit;
 
     settings_ = updatedSettings;
     resultCardWidget_->setCardOpacityPercent(settings_.resultCardOpacityPercent);
+    resultCardWidget_->setCardStyle(settings_.resultCardStyle);
+    if (queryHistoryService_ != nullptr) {
+        queryHistoryService_->setMaxEntries(settings_.queryHistoryLimit);
+    }
     settingsService_->save(settings_);
 
     if (warningMessage.isEmpty()) {

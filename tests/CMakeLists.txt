@@ -11,6 +11,7 @@ function(add_wordsnap_test test_name)
 
     target_link_libraries(${test_name} PRIVATE
         Qt6::Core
+        Qt6::Gui
         Qt6::Test
     )
 
@@ -30,4 +31,15 @@ add_wordsnap_test(PhoneticExtractorTest
 add_wordsnap_test(StarDictBackendTest
     StarDictBackendTest.cpp
     ../src/services/StarDictBackend.cpp
+)
+
+add_wordsnap_test(LookupCoordinatorTest
+    LookupCoordinatorTest.cpp
+    ../src/app/LookupCoordinator.cpp
+    ../src/services/PhoneticExtractor.cpp
+)
+
+add_wordsnap_test(QueryHistoryServiceTest
+    QueryHistoryServiceTest.cpp
+    ../src/services/QueryHistoryService.cpp
 )

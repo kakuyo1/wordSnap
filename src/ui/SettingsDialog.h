@@ -8,6 +8,7 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 class QSlider;
+class QSpinBox;
 
 class SettingsDialog final : public QDialog {
     Q_OBJECT
@@ -30,6 +31,8 @@ private:
     QComboBox* displayModeCombo_{nullptr};
     QLineEdit* starDictDirEdit_{nullptr};
     QLineEdit* tessdataDirEdit_{nullptr};
+    QComboBox* resultCardStyleCombo_{nullptr};
     QSlider* resultCardOpacitySlider_{nullptr};
     QLabel* resultCardOpacityValueLabel_{nullptr};
+    QSpinBox* queryHistoryLimitSpinBox_{nullptr};
 };

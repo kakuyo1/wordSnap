@@ -11,6 +11,8 @@ private slots:
     void pickPrimaryPhoneticCombinesUkAndUs();
     void extractInlinePhoneticFromLeadingBracket();
     void extractInlinePhoneticFromPipeSeparatedSegments();
+    void extractInlinePhoneticRejectsBracketedCjkTag();
+    void extractInlinePhoneticRejectsPartOfSpeechTag();
 };
 
 void PhoneticExtractorTest::pickPrimaryPhoneticPrefersMergedField() {
@@ -57,6 +59,34 @@ void PhoneticExtractorTest::extractInlinePhoneticFromPipeSeparatedSegments() {
     QVERIFY(ok);
     QCOMPARE(extracted, QStringLiteral("rʌn"));
     QCOMPARE(stripped, QStringLiteral("v. move quickly | 跑"));
+}
+
+void PhoneticExtractorTest::extractInlinePhoneticRejectsBracketedCjkTag() {
+    QString extracted;
+    QString stripped;
+
+    const bool ok = PhoneticExtractor::extractInlinePhonetic(
+        QStringLiteral("[网络] 在线词典"),
+        &extracted,
+        &stripped);
+
+    QVERIFY(!ok);
+    QVERIFY(extracted.isEmpty());
+    QVERIFY(stripped.isEmpty());
+}
+
+void PhoneticExtractorTest::extractInlinePhoneticRejectsPartOfSpeechTag() {
+    QString extracted;
+    QString stripped;
+
+    const bool ok = PhoneticExtractor::extractInlinePhonetic(
+        QStringLiteral("[adj.] beautiful or attractive"),
+        &extracted,
+        &stripped);
+
+    QVERIFY(!ok);
+    QVERIFY(extracted.isEmpty());
+    QVERIFY(stripped.isEmpty());
 }
 
 QTEST_APPLESS_MAIN(PhoneticExtractorTest)

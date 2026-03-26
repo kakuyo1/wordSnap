@@ -16,8 +16,30 @@ QString unwrapSinglePhonetic(QString text) {
     return text;
 }
 
+bool hasIpaHint(const QString& segment) {
+    static const QRegularExpression kIpaLikeChars(
+        QStringLiteral("[ˈˌˊˋːəәæɑɒɔɜɪʊʌθðŋʃʒɚɝ]"));
+    return kIpaLikeChars.match(segment).hasMatch();
+}
+
+bool isPartOfSpeechMarker(const QString& segment) {
+    static const QRegularExpression kPartOfSpeech(
+        QStringLiteral("^(?:n|v|vi|vt|adj|adv|prep|pron|conj|interj|num|art|det|aux|noun|verb|adjective|adverb)\\.?$"),
+        QRegularExpression::CaseInsensitiveOption);
+    return kPartOfSpeech.match(segment.trimmed()).hasMatch();
+}
+
 bool looksLikePhoneticSegment(const QString& segment) {
-    const QString trimmed = segment.trimmed();
+    QString trimmed = segment.trimmed();
+    if (trimmed.isEmpty()) {
+        return false;
+    }
+
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']'))
+        || (trimmed.startsWith('/') && trimmed.endsWith('/'))) {
+        trimmed = unwrapSinglePhonetic(trimmed);
+    }
+
     if (trimmed.isEmpty() || trimmed.size() > 96) {
         return false;
     }
@@ -27,14 +49,16 @@ bool looksLikePhoneticSegment(const QString& segment) {
         return false;
     }
 
-    if ((trimmed.startsWith('[') && trimmed.endsWith(']'))
-        || (trimmed.startsWith('/') && trimmed.endsWith('/'))) {
-        return true;
+    static const QRegularExpression kContainsDigit(QStringLiteral("\\d"));
+    if (kContainsDigit.match(trimmed).hasMatch()) {
+        return false;
     }
 
-    static const QRegularExpression kIpaLikeChars(
-        QStringLiteral("[ˈˌˊˋːəәæɑɒɔɜɪʊʌθðŋʃʒɚɝ]"));
-    return kIpaLikeChars.match(trimmed).hasMatch();
+    if (isPartOfSpeechMarker(trimmed)) {
+        return false;
+    }
+
+    return hasIpaHint(trimmed);
 }
 
 QString joinNonEmptySegments(const QStringList& segments, const int skipIndex) {
@@ -78,14 +102,26 @@ bool extractPhoneticTokenFromText(const QString& text,
     static const QRegularExpression kIpaToken(
         QStringLiteral("([A-Za-z,.']{0,12}[ˈˌˊˋːəәæɑɒɔɜɪʊʌθðŋʃʒɚɝ][A-Za-zˈˌˊˋːəәæɑɒɔɜɪʊʌθðŋʃʒɚɝ,.']{0,20})"));
 
-    QRegularExpressionMatch bestMatch;
     int bestStart = -1;
     int bestLength = 0;
     QString bestPhonetic;
 
-    auto considerMatch = [&](const QRegularExpression& re, const bool wrapped) {
+    auto considerMatch = [&](const QRegularExpression& re,
+                             const QString& wrapPrefix,
+                             const QString& wrapSuffix,
+                             const bool wrapped) {
         const QRegularExpressionMatch match = re.match(text);
         if (!match.hasMatch()) {
+            return;
+        }
+
+        const QString candidate = wrapped ? match.captured(1).trimmed() : match.captured(0).trimmed();
+        if (candidate.isEmpty()) {
+            return;
+        }
+
+        const QString probe = wrapPrefix + candidate + wrapSuffix;
+        if (!looksLikePhoneticSegment(probe)) {
             return;
         }
 
@@ -99,15 +135,14 @@ bool extractPhoneticTokenFromText(const QString& text,
             return;
         }
 
-        bestMatch = match;
         bestStart = start;
         bestLength = length;
-        bestPhonetic = wrapped ? match.captured(1).trimmed() : match.captured(0).trimmed();
+        bestPhonetic = candidate;
     };
 
-    considerMatch(kBracketToken, true);
-    considerMatch(kSlashToken, true);
-    considerMatch(kIpaToken, false);
+    considerMatch(kBracketToken, QStringLiteral("["), QStringLiteral("]"), true);
+    considerMatch(kSlashToken, QStringLiteral("/"), QStringLiteral("/"), true);
+    considerMatch(kIpaToken, QString(), QString(), false);
 
     if (bestStart < 0 || bestPhonetic.isEmpty()) {
         return false;
@@ -161,24 +196,30 @@ bool PhoneticExtractor::extractInlinePhonetic(const QString& text,
 
     const QRegularExpressionMatch bracketMatch = kLeadingBracket.match(trimmed);
     if (bracketMatch.hasMatch()) {
-        if (extractedPhonetic != nullptr) {
-            *extractedPhonetic = unwrapSinglePhonetic(bracketMatch.captured(1));
+        const QString candidate = bracketMatch.captured(1).trimmed();
+        if (looksLikePhoneticSegment(QStringLiteral("[%1]").arg(candidate))) {
+            if (extractedPhonetic != nullptr) {
+                *extractedPhonetic = unwrapSinglePhonetic(candidate);
+            }
+            if (strippedText != nullptr) {
+                *strippedText = bracketMatch.captured(2).trimmed();
+            }
+            return true;
         }
-        if (strippedText != nullptr) {
-            *strippedText = bracketMatch.captured(2).trimmed();
-        }
-        return true;
     }
 
     const QRegularExpressionMatch slashMatch = kLeadingSlash.match(trimmed);
     if (slashMatch.hasMatch()) {
-        if (extractedPhonetic != nullptr) {
-            *extractedPhonetic = unwrapSinglePhonetic(slashMatch.captured(1));
+        const QString candidate = slashMatch.captured(1).trimmed();
+        if (looksLikePhoneticSegment(QStringLiteral("/%1/").arg(candidate))) {
+            if (extractedPhonetic != nullptr) {
+                *extractedPhonetic = unwrapSinglePhonetic(candidate);
+            }
+            if (strippedText != nullptr) {
+                *strippedText = slashMatch.captured(2).trimmed();
+            }
+            return true;
         }
-        if (strippedText != nullptr) {
-            *strippedText = slashMatch.captured(2).trimmed();
-        }
-        return true;
     }
 
     const QStringList parts = trimmed.split('|');

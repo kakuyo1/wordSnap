@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSlider>
+#include <QSpinBox>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -30,8 +31,10 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
       displayModeCombo_(new QComboBox(this)),
       starDictDirEdit_(new QLineEdit(this)),
       tessdataDirEdit_(new QLineEdit(this)),
+      resultCardStyleCombo_(new QComboBox(this)),
       resultCardOpacitySlider_(new QSlider(Qt::Horizontal, this)),
-      resultCardOpacityValueLabel_(new QLabel(this)) {
+      resultCardOpacityValueLabel_(new QLabel(this)),
+      queryHistoryLimitSpinBox_(new QSpinBox(this)) {
     setWindowTitle(QStringLiteral("wordSnap Settings"));
     setModal(true);
     resize(620, 0);
@@ -46,6 +49,15 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     const int modeIndex = displayModeCombo_->findData(displayModeToString(initialSettings.displayMode));
     if (modeIndex >= 0) {
         displayModeCombo_->setCurrentIndex(modeIndex);
+    }
+
+    resultCardStyleCombo_->addItem(QStringLiteral("Kraft paper"), QStringLiteral("kraft_paper"));
+    resultCardStyleCombo_->addItem(QStringLiteral("Glassmorphism"), QStringLiteral("glassmorphism"));
+    resultCardStyleCombo_->addItem(QStringLiteral("Terminal"), QStringLiteral("terminal"));
+    resultCardStyleCombo_->addItem(QStringLiteral("Clay"), QStringLiteral("clay"));
+    const int styleIndex = resultCardStyleCombo_->findData(resultCardStyleToString(initialSettings.resultCardStyle));
+    if (styleIndex >= 0) {
+        resultCardStyleCombo_->setCurrentIndex(styleIndex);
     }
 
     starDictDirEdit_->setText(QDir::toNativeSeparators(initialSettings.starDictDir));
@@ -79,6 +91,10 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     resultCardOpacityValueLabel_->setMinimumWidth(52);
     resultCardOpacityValueLabel_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
+    queryHistoryLimitSpinBox_->setRange(kMinQueryHistoryLimit, kMaxQueryHistoryLimit);
+    queryHistoryLimitSpinBox_->setSingleStep(25);
+    queryHistoryLimitSpinBox_->setValue(clampQueryHistoryLimit(initialSettings.queryHistoryLimit));
+
     auto* opacityRow = new QWidget(this);
     auto* opacityLayout = new QHBoxLayout(opacityRow);
     opacityLayout->setContentsMargins(0, 0, 0, 0);
@@ -88,9 +104,11 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
 
     formLayout->addRow(QStringLiteral("Hotkey"), hotkeyEdit_);
     formLayout->addRow(QStringLiteral("Display mode"), displayModeCombo_);
+    formLayout->addRow(QStringLiteral("Result card style"), resultCardStyleCombo_);
     formLayout->addRow(QStringLiteral("StarDict folder"), starDictDirRow);
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
     formLayout->addRow(QStringLiteral("Card opacity"), opacityRow);
+    formLayout->addRow(QStringLiteral("History size (N)"), queryHistoryLimitSpinBox_);
 
     auto* hintLabel = new QLabel(
         QStringLiteral("Hotkey format examples: Shift+Alt+S, Ctrl+Alt+F2, Ctrl+Shift+Space"),
@@ -120,6 +138,8 @@ AppSettings SettingsDialog::editedSettings() const {
     edited.starDictDir = QDir::fromNativeSeparators(starDictDirEdit_->text().trimmed());
     edited.tessdataDir = QDir::fromNativeSeparators(tessdataDirEdit_->text().trimmed());
     edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());
+    edited.resultCardStyle = resultCardStyleFromString(resultCardStyleCombo_->currentData().toString());
+    edited.queryHistoryLimit = clampQueryHistoryLimit(queryHistoryLimitSpinBox_->value());
     return edited;
 }
 

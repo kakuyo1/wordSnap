@@ -32,6 +32,7 @@ public:
 
 signals:
     void captureRequested();
+    void historyRequested();
     void settingsRequested();
     void quitRequested();
 
@@ -39,6 +40,7 @@ private:
     std::unique_ptr<QSystemTrayIcon> trayIcon_;
     std::unique_ptr<QMenu> trayMenu_;
     QAction* captureAction_{nullptr};
+    QAction* historyAction_{nullptr};
     QAction* settingsAction_{nullptr};
     QAction* quitAction_{nullptr};
 };

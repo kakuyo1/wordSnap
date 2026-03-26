@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDateTime>
 #include <QString>
 #include <QStringList>
 
@@ -10,8 +11,19 @@ enum class DisplayMode {
     Bilingual
 };
 
+// Result card visual style.
+enum class ResultCardStyle {
+    KraftPaper,
+    Glassmorphism,
+    Terminal,
+    Clay
+};
+
 constexpr int kMinResultCardOpacityPercent = 35;
 constexpr int kMaxResultCardOpacityPercent = 100;
+constexpr int kDefaultQueryHistoryLimit = 300;
+constexpr int kMinQueryHistoryLimit = 50;
+constexpr int kMaxQueryHistoryLimit = 2000;
 
 inline int clampResultCardOpacityPercent(const int value) {
     if (value < kMinResultCardOpacityPercent) {
@@ -19,6 +31,16 @@ inline int clampResultCardOpacityPercent(const int value) {
     }
     if (value > kMaxResultCardOpacityPercent) {
         return kMaxResultCardOpacityPercent;
+    }
+    return value;
+}
+
+inline int clampQueryHistoryLimit(const int value) {
+    if (value < kMinQueryHistoryLimit) {
+        return kMinQueryHistoryLimit;
+    }
+    if (value > kMaxQueryHistoryLimit) {
+        return kMaxQueryHistoryLimit;
     }
     return value;
 }
@@ -52,6 +74,8 @@ struct AppSettings {
     QString starDictDir;
     QString tessdataDir;
     int resultCardOpacityPercent{92};
+    ResultCardStyle resultCardStyle{ResultCardStyle::KraftPaper};
+    int queryHistoryLimit{kDefaultQueryHistoryLimit};
 };
 
 // Converts display mode enum to stable settings string.
@@ -79,3 +103,44 @@ inline DisplayMode displayModeFromString(QString value) {
     }
     return DisplayMode::Bilingual;
 }
+
+// Converts result card style enum to stable settings string.
+inline QString resultCardStyleToString(const ResultCardStyle style) {
+    switch (style) {
+    case ResultCardStyle::KraftPaper:
+        return QStringLiteral("kraft_paper");
+    case ResultCardStyle::Glassmorphism:
+        return QStringLiteral("glassmorphism");
+    case ResultCardStyle::Terminal:
+        return QStringLiteral("terminal");
+    case ResultCardStyle::Clay:
+        return QStringLiteral("clay");
+    }
+
+    return QStringLiteral("kraft_paper");
+}
+
+// Parses result card style from settings string.
+inline ResultCardStyle resultCardStyleFromString(QString value) {
+    value = value.trimmed().toLower();
+    if (value == QStringLiteral("glassmorphism")) {
+        return ResultCardStyle::Glassmorphism;
+    }
+    if (value == QStringLiteral("terminal")) {
+        return ResultCardStyle::Terminal;
+    }
+    if (value == QStringLiteral("clay")) {
+        return ResultCardStyle::Clay;
+    }
+    return ResultCardStyle::KraftPaper;
+}
+
+// Persistent single query snapshot used by history and replay.
+struct QueryHistoryRecord {
+    QDateTime timestampUtc;
+    QString statusCode;
+    QString queryWord;
+    QString headword;
+    QString preview;
+    QString phonetic;
+};

@@ -7,8 +7,10 @@
 ## 1. 当前能力
 
 - 已具备可运行闭环：托盘常驻、全局热键、框选截图、OCR、词典查询、结果展示。
-- 结果卡片支持“单词 + 音标 + 释义”展示，并支持透明度设置。
-- 设置页可配置热键、显示模式、词典目录、tessdata 目录。
+- 结果卡片支持四种风格（Kraft paper / Glassmorphism / Terminal / Clay）与透明度设置。
+- 结果状态统一为 `FOUND` / `OCR_FAILED` / `UNKNOWN` / `DICT_UNAVAILABLE`，卡片与托盘文案保持一致。
+- 已支持查询历史 V1：本地 JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条限制（默认 300，可配置）。
+- 设置页可配置热键、显示模式、词典目录、tessdata 目录、卡片风格、历史条数上限。
 - 启动时可自动探测 Tesseract 路径并给出可读错误提示。
 
 当前项目状态详见：`docs/requirements-status.md`。

@@ -34,6 +34,17 @@ bool writeFile(const QString& path, const QByteArray& data) {
     }
     return true;
 }
+
+QByteArray makeIfoData(const QByteArray& idxData) {
+    return QByteArray("StarDict's dict ifo file\n")
+           + QByteArray("version=2.4.2\n")
+           + QByteArray("bookname=demo\n")
+           + QByteArray("wordcount=1\n")
+           + QByteArray("idxfilesize=")
+           + QByteArray::number(idxData.size())
+           + QByteArray("\n")
+           + QByteArray("sametypesequence=m\n");
+}
 } // namespace
 
 class StarDictBackendTest : public QObject {
@@ -41,6 +52,9 @@ class StarDictBackendTest : public QObject {
 
 private slots:
     void loadFromDirectoryRejectsEmptyPath();
+    void loadFromDirectoryRejectsMalformedIdxWithoutSeparator();
+    void loadFromDirectoryRejectsMalformedIdxWithoutOffsetAndSize();
+    void loadFromDirectoryRejectsEmptyDictPayload();
     void loadAndLookupReturnsExpectedEntry();
 };
 
@@ -50,6 +64,73 @@ void StarDictBackendTest::loadFromDirectoryRejectsEmptyPath() {
 
     QVERIFY(!backend.loadFromDirectory(QString(), &error));
     QVERIFY(!error.isEmpty());
+}
+
+void StarDictBackendTest::loadFromDirectoryRejectsMalformedIdxWithoutSeparator() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString base = tempDir.path() + QStringLiteral("/demo");
+    const QString ifoPath = base + QStringLiteral(".ifo");
+    const QString idxPath = base + QStringLiteral(".idx");
+    const QString dictPath = base + QStringLiteral(".dict");
+
+    const QByteArray idxData("run");
+    QVERIFY(writeFile(ifoPath, makeIfoData(idxData)));
+    QVERIFY(writeFile(idxPath, idxData));
+    QVERIFY(writeFile(dictPath, QByteArray("placeholder definition")));
+
+    StarDictBackend backend;
+    QString error;
+    QVERIFY(!backend.loadFromDirectory(tempDir.path(), &error));
+    QVERIFY(error.contains(QStringLiteral("Malformed .idx record"), Qt::CaseInsensitive));
+}
+
+void StarDictBackendTest::loadFromDirectoryRejectsMalformedIdxWithoutOffsetAndSize() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString base = tempDir.path() + QStringLiteral("/demo");
+    const QString ifoPath = base + QStringLiteral(".ifo");
+    const QString idxPath = base + QStringLiteral(".idx");
+    const QString dictPath = base + QStringLiteral(".dict");
+
+    QByteArray idxData;
+    idxData.append("run");
+    idxData.append('\0');
+    idxData.append(static_cast<char>(0x00));
+    idxData.append(static_cast<char>(0x01));
+
+    QVERIFY(writeFile(ifoPath, makeIfoData(idxData)));
+    QVERIFY(writeFile(idxPath, idxData));
+    QVERIFY(writeFile(dictPath, QByteArray("placeholder definition")));
+
+    StarDictBackend backend;
+    QString error;
+    QVERIFY(!backend.loadFromDirectory(tempDir.path(), &error));
+    QVERIFY(error.contains(QStringLiteral("missing offset/size"), Qt::CaseInsensitive));
+}
+
+void StarDictBackendTest::loadFromDirectoryRejectsEmptyDictPayload() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString base = tempDir.path() + QStringLiteral("/demo");
+    const QString ifoPath = base + QStringLiteral(".ifo");
+    const QString idxPath = base + QStringLiteral(".idx");
+    const QString dictPath = base + QStringLiteral(".dict");
+
+    QByteArray idxData;
+    appendIdxRecord(&idxData, QByteArray("run"), 0U, 5U);
+
+    QVERIFY(writeFile(ifoPath, makeIfoData(idxData)));
+    QVERIFY(writeFile(idxPath, idxData));
+    QVERIFY(writeFile(dictPath, QByteArray()));
+
+    StarDictBackend backend;
+    QString error;
+    QVERIFY(!backend.loadFromDirectory(tempDir.path(), &error));
+    QVERIFY(error.contains(QStringLiteral("Dictionary data file is empty"), Qt::CaseInsensitive));
 }
 
 void StarDictBackendTest::loadAndLookupReturnsExpectedEntry() {
@@ -67,16 +148,7 @@ void StarDictBackendTest::loadAndLookupReturnsExpectedEntry() {
     QByteArray idxData;
     appendIdxRecord(&idxData, QByteArray("run"), 0U, static_cast<quint32>(definition.size()));
 
-    const QByteArray ifoData = QByteArray("StarDict's dict ifo file\n")
-                               + QByteArray("version=2.4.2\n")
-                               + QByteArray("bookname=demo\n")
-                               + QByteArray("wordcount=1\n")
-                               + QByteArray("idxfilesize=")
-                               + QByteArray::number(idxData.size())
-                               + QByteArray("\n")
-                               + QByteArray("sametypesequence=m\n");
-
-    QVERIFY(writeFile(ifoPath, ifoData));
+    QVERIFY(writeFile(ifoPath, makeIfoData(idxData)));
     QVERIFY(writeFile(idxPath, idxData));
     QVERIFY(writeFile(dictPath, definition));
 
