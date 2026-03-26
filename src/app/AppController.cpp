@@ -192,7 +192,7 @@ void AppController::onRegionSelected(const QRect& globalRect) {
         result.cardBody,
         result.cardPhonetic,
         anchorPos,
-        result.cardTimeoutMs);
+        settings_.resultCardDurationMs);
     trayController_->showInfo(QStringLiteral("wordSnap V1"), result.trayMessage, result.trayTimeoutMs);
 
     appendHistoryRecord(
@@ -322,7 +322,7 @@ void AppController::showHistoryRecord(const QueryHistoryRecord& record) {
 
     const QPoint anchorPos = QCursor::pos();
     QToolTip::showText(anchorPos, tooltip);
-    resultCardWidget_->showMessage(statusCode, displayWord, preview, record.phonetic, anchorPos, 4200);
+    resultCardWidget_->showMessage(statusCode, displayWord, preview, record.phonetic, anchorPos, settings_.resultCardDurationMs);
 
     QString trayMessage = statusCode;
     if (!displayWord.isEmpty()) {
@@ -382,6 +382,7 @@ void AppController::onSettingsRequested() {
     updatedSettings.displayMode = requestedSettings.displayMode;
     updatedSettings.tessdataDir = requestedSettings.tessdataDir.trimmed();
     updatedSettings.resultCardOpacityPercent = requestedSettings.resultCardOpacityPercent;
+    updatedSettings.resultCardDurationMs = requestedSettings.resultCardDurationMs;
     updatedSettings.resultCardStyle = requestedSettings.resultCardStyle;
     updatedSettings.queryHistoryLimit = requestedSettings.queryHistoryLimit;
     updatedSettings.aiAssistEnabled = requestedSettings.aiAssistEnabled;

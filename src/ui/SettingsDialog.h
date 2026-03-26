@@ -36,6 +36,7 @@ private:
     QComboBox* resultCardStyleCombo_{nullptr};
     QSlider* resultCardOpacitySlider_{nullptr};
     QLabel* resultCardOpacityValueLabel_{nullptr};
+    QSpinBox* resultCardDurationSpinBox_{nullptr};
     QSpinBox* queryHistoryLimitSpinBox_{nullptr};
     QCheckBox* aiAssistEnabledCheckBox_{nullptr};
     QLineEdit* aiApiKeyEdit_{nullptr};

@@ -36,6 +36,7 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
       resultCardStyleCombo_(new QComboBox(this)),
       resultCardOpacitySlider_(new QSlider(Qt::Horizontal, this)),
       resultCardOpacityValueLabel_(new QLabel(this)),
+      resultCardDurationSpinBox_(new QSpinBox(this)),
       queryHistoryLimitSpinBox_(new QSpinBox(this)),
       aiAssistEnabledCheckBox_(new QCheckBox(this)),
       aiApiKeyEdit_(new QLineEdit(this)),
@@ -102,6 +103,11 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     queryHistoryLimitSpinBox_->setSingleStep(25);
     queryHistoryLimitSpinBox_->setValue(clampQueryHistoryLimit(initialSettings.queryHistoryLimit));
 
+    resultCardDurationSpinBox_->setRange(kMinResultCardDurationMs, kMaxResultCardDurationMs);
+    resultCardDurationSpinBox_->setSingleStep(500);
+    resultCardDurationSpinBox_->setSuffix(QStringLiteral(" ms"));
+    resultCardDurationSpinBox_->setValue(clampResultCardDurationMs(initialSettings.resultCardDurationMs));
+
     aiAssistEnabledCheckBox_->setChecked(initialSettings.aiAssistEnabled);
 
     aiApiKeyEdit_->setText(initialSettings.aiApiKey);
@@ -132,6 +138,7 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     formLayout->addRow(QStringLiteral("StarDict folder"), starDictDirRow);
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
     formLayout->addRow(QStringLiteral("Card opacity"), opacityRow);
+    formLayout->addRow(QStringLiteral("Card duration"), resultCardDurationSpinBox_);
     formLayout->addRow(QStringLiteral("History size (N)"), queryHistoryLimitSpinBox_);
     formLayout->addRow(QStringLiteral("Enable AI assist"), aiAssistEnabledCheckBox_);
     formLayout->addRow(QStringLiteral("AI API key"), aiApiKeyEdit_);
@@ -169,6 +176,7 @@ AppSettings SettingsDialog::editedSettings() const {
     edited.starDictDir = QDir::fromNativeSeparators(starDictDirEdit_->text().trimmed());
     edited.tessdataDir = QDir::fromNativeSeparators(tessdataDirEdit_->text().trimmed());
     edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());
+    edited.resultCardDurationMs = clampResultCardDurationMs(resultCardDurationSpinBox_->value());
     edited.resultCardStyle = resultCardStyleFromString(resultCardStyleCombo_->currentData().toString());
     edited.queryHistoryLimit = clampQueryHistoryLimit(queryHistoryLimitSpinBox_->value());
     edited.aiAssistEnabled = aiAssistEnabledCheckBox_->isChecked();

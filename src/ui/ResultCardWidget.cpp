@@ -2,6 +2,8 @@
 
 #include <QGuiApplication>
 #include <QEasingCurve>
+#include <QCursor>
+#include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLinearGradient>
@@ -359,7 +361,7 @@ ResultCardWidget::ResultCardWidget(QWidget* parent)
 
     autoHideTimer_ = new QTimer(this);
     autoHideTimer_->setSingleShot(true);
-    connect(autoHideTimer_, &QTimer::timeout, this, &QWidget::hide);
+    connect(autoHideTimer_, &QTimer::timeout, this, &ResultCardWidget::onAutoHideTimeout);
 
     setCardOpacityPercent(92);
     applyTheme();
@@ -411,6 +413,21 @@ void ResultCardWidget::paintEvent(QPaintEvent* event) {
         paintClay(&painter, cardRect);
         break;
     }
+}
+
+void ResultCardWidget::enterEvent(QEnterEvent* event) {
+    pendingHideOnLeave_ = false;
+    QWidget::enterEvent(event);
+}
+
+void ResultCardWidget::leaveEvent(QEvent* event) {
+    QWidget::leaveEvent(event);
+    if (!pendingHideOnLeave_) {
+        return;
+    }
+
+    pendingHideOnLeave_ = false;
+    hide();
 }
 
 void ResultCardWidget::showMessage(const QString& statusCode,
@@ -522,6 +539,7 @@ void ResultCardWidget::showMessage(const QString& statusCode,
     }
 
     lastAutoHideMs_ = autoHideMs;
+    pendingHideOnLeave_ = false;
     autoHideTimer_->stop();
     if (autoHideMs > 0) {
         autoHideTimer_->start(autoHideMs);
@@ -577,6 +595,17 @@ void ResultCardWidget::showAiText(const QString& text, const int autoHideMs) {
     if (autoHideMs > 0) {
         autoHideTimer_->start(autoHideMs);
     }
+}
+
+void ResultCardWidget::onAutoHideTimeout() {
+    const QPoint localCursorPos = mapFromGlobal(QCursor::pos());
+    if (rect().contains(localCursorPos)) {
+        pendingHideOnLeave_ = true;
+        return;
+    }
+
+    pendingHideOnLeave_ = false;
+    hide();
 }
 
 void ResultCardWidget::applyTheme() {

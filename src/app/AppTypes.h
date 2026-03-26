@@ -21,6 +21,9 @@ enum class ResultCardStyle {
 
 constexpr int kMinResultCardOpacityPercent = 35;
 constexpr int kMaxResultCardOpacityPercent = 100;
+constexpr int kDefaultResultCardDurationMs = 6500;
+constexpr int kMinResultCardDurationMs = 1000;
+constexpr int kMaxResultCardDurationMs = 30000;
 constexpr int kDefaultQueryHistoryLimit = 300;
 constexpr int kMinQueryHistoryLimit = 50;
 constexpr int kMaxQueryHistoryLimit = 2000;
@@ -44,6 +47,16 @@ inline int clampQueryHistoryLimit(const int value) {
     }
     if (value > kMaxQueryHistoryLimit) {
         return kMaxQueryHistoryLimit;
+    }
+    return value;
+}
+
+inline int clampResultCardDurationMs(const int value) {
+    if (value < kMinResultCardDurationMs) {
+        return kMinResultCardDurationMs;
+    }
+    if (value > kMaxResultCardDurationMs) {
+        return kMaxResultCardDurationMs;
     }
     return value;
 }
@@ -93,6 +106,7 @@ struct AppSettings {
     QString starDictDir;
     QString tessdataDir;
     int resultCardOpacityPercent{92};
+    int resultCardDurationMs{kDefaultResultCardDurationMs};
     ResultCardStyle resultCardStyle{ResultCardStyle::KraftPaper};
     int queryHistoryLimit{kDefaultQueryHistoryLimit};
     bool aiAssistEnabled{false};

@@ -5,6 +5,8 @@
 #include "app/AppTypes.h"
 
 class QLabel;
+class QEnterEvent;
+class QEvent;
 class QPropertyAnimation;
 class QTimer;
 
@@ -20,7 +22,7 @@ public:
                      const QString& body,
                      const QString& phonetic,
                      const QPoint& anchorGlobalPos,
-                     int autoHideMs = 4200);
+                     int autoHideMs = kDefaultResultCardDurationMs);
     void showAiLoading();
     void showAiContent(const AiAssistContent& content);
     void showAiError(const QString& message);
@@ -30,6 +32,8 @@ public:
 
 protected:
     void paintEvent(QPaintEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     QLabel* statusLabel_{nullptr};
@@ -42,8 +46,10 @@ private:
     QPropertyAnimation* fadeInAnimation_{nullptr};
     QPropertyAnimation* popInAnimation_{nullptr};
     QTimer* autoHideTimer_{nullptr};
-    int lastAutoHideMs_{4200};
+    int lastAutoHideMs_{kDefaultResultCardDurationMs};
+    bool pendingHideOnLeave_{false};
 
     void showAiText(const QString& text, int autoHideMs);
+    void onAutoHideTimeout();
     void applyTheme();
 };

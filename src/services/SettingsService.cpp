@@ -12,6 +12,7 @@
  * StarDictDir=
  * TessdataDir=
  * ResultCardOpacity=
+ * ResultCardDurationMs=
  * ResultCardStyle=
  * QueryHistoryLimit=
  * AiAssistEnabled=
@@ -27,6 +28,7 @@ constexpr auto kKeyDisplayMode = "display_mode";
 constexpr auto kKeyStarDictDir = "stardict_dir";
 constexpr auto kKeyTessdataDir = "tessdata_dir";
 constexpr auto kKeyResultCardOpacity = "result_card_opacity";
+constexpr auto kKeyResultCardDurationMs = "result_card_duration_ms";
 constexpr auto kKeyResultCardStyle = "result_card_style";
 constexpr auto kKeyQueryHistoryLimit = "query_history_limit";
 constexpr auto kKeyAiAssistEnabled = "ai_assist_enabled";
@@ -71,6 +73,13 @@ AppSettings SettingsService::load() const {
             .value(
                 QString::fromLatin1(kKeyResultCardOpacity),
                 result.resultCardOpacityPercent)
+            .toInt());
+
+    result.resultCardDurationMs = clampResultCardDurationMs(
+        settings
+            .value(
+                QString::fromLatin1(kKeyResultCardDurationMs),
+                result.resultCardDurationMs)
             .toInt());
 
     const QString styleRaw = settings
@@ -140,6 +149,9 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.setValue(
         QString::fromLatin1(kKeyResultCardOpacity),
         clampResultCardOpacityPercent(appSettings.resultCardOpacityPercent));
+    settings.setValue(
+        QString::fromLatin1(kKeyResultCardDurationMs),
+        clampResultCardDurationMs(appSettings.resultCardDurationMs));
     settings.setValue(
         QString::fromLatin1(kKeyResultCardStyle),
         resultCardStyleToString(appSettings.resultCardStyle));
