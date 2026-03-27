@@ -81,6 +81,7 @@
 
 - [x] PR 必跑：`unit + integration`。
 - [ ] 夜间/发布前：`ui + e2e smoke`。
+  - [x] 已新增 nightly/workflow_dispatch 工作流，执行 `ui` 标签测试并在存在 `e2e` 标签测试时自动执行。
 - [ ] 失败归因模板与回滚策略文档化。
 
 ## 3. 当前迭代执行记录
@@ -99,6 +100,7 @@
 - 2026-03-27：启动 P3：新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke，用例覆盖窗口显示字段与自动隐藏基础行为。
 - 2026-03-27：P3 补齐 `ResultCardWidget` 关键行为断言：贴边回正与 AI 内容扩展后回正，完成 UI 最小自动化集。
 - 2026-03-27：启动 P4：新增 GitHub Actions 工作流 `.github/workflows/ci-unit-integration.yml`，对 PR/main push 执行 `unit + integration` 分层门禁。
+- 2026-03-27：P4 新增 `.github/workflows/nightly-ui-e2e-smoke.yml`，按夜间与手动触发执行 UI smoke，并在存在 e2e 测试时补跑 e2e smoke。
 
 ## 4. 本轮完成后更新规则
 

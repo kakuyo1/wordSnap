@@ -1,0 +1,40 @@
+name: Nightly UI E2E Smoke
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-smoke:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.5.3
+          cache: true
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --config Debug
+
+      - name: Run ui smoke tests
+        run: ctest --test-dir build -C Debug -L ui --output-on-failure
+
+      - name: Run e2e smoke tests when available
+        shell: pwsh
+        run: |
+          $listOutput = ctest --test-dir build -C Debug -N -L e2e
+          if ($listOutput -match 'Total Tests: 0') {
+            Write-Host 'No e2e-labeled tests found. Skip this step.'
+            exit 0
+          }
+
+          ctest --test-dir build -C Debug -L e2e --output-on-failure
