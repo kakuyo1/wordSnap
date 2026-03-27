@@ -11,6 +11,7 @@ class LookupCoordinatorTest : public QObject {
 private slots:
     void runReturnsOcrFailedWhenPipelineDependenciesMissing();
     void runReturnsOcrFailedWhenCaptureIsEmpty();
+    void runReturnsOcrFailedWhenPreprocessImageIsEmpty();
     void runReturnsOcrFailedWhenRecognizerFails();
     void runReturnsOcrFailedWhenNormalizedCandidateIsEmpty();
     void runReturnsOcrFailedWhenNormalizedCandidateContainsWhitespace();
@@ -57,6 +58,27 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenCaptureIsEmpty() {
     QCOMPARE(result.cardTimeoutMs, 2200);
     QCOMPARE(result.trayTimeoutMs, 1400);
     QVERIFY(!fixture.preprocessCalled);
+}
+
+void LookupCoordinatorTest::runReturnsOcrFailedWhenPreprocessImageIsEmpty() {
+    LookupCoordinatorFixture fixture;
+    fixture.preprocessedImage = QImage();
+    LookupCoordinator coordinator = fixture.createCoordinator();
+
+    const LookupCoordinator::Result result =
+        coordinator.run(QRect(10, 20, 30, 40), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
+    QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
+    QVERIFY(result.queryWord.isEmpty());
+    QCOMPARE(result.tooltipText, QStringLiteral("OCR_FAILED | Preprocess failed. Please try again."));
+    QCOMPARE(result.cardTitle, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.cardBody, QStringLiteral("Preprocess failed. Please try again."));
+    QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | Preprocess failed. Please try again."));
+    QCOMPARE(result.cardTimeoutMs, 2200);
+    QCOMPARE(result.trayTimeoutMs, 1400);
+    QVERIFY(fixture.preprocessCalled);
+    QVERIFY(!fixture.recognizeCalled);
 }
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {

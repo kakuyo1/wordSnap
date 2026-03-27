@@ -15,6 +15,7 @@ struct LookupCoordinatorFixture {
     DictionaryEntry dictionaryEntry{};
 
     bool preprocessCalled{false};
+    bool recognizeCalled{false};
     bool normalizeCalled{false};
     bool dictionaryReadyCalled{false};
     bool lookupCalled{false};
@@ -44,6 +45,7 @@ struct LookupCoordinatorFixture {
                 return preprocessedImage;
             },
             [this](const QImage&, const QString&, QString* errorMessage) {
+                recognizeCalled = true;
                 if (errorMessage != nullptr) {
                     *errorMessage = ocrError;
                 }

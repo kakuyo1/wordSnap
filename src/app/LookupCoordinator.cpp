@@ -122,6 +122,15 @@ LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
     }
 
     const QImage preprocessed = dependencies_.preprocess(captured);
+    if (preprocessed.isNull()) {
+        return makeStatusResult(
+            Status::OcrFailed,
+            QString(),
+            QStringLiteral("Preprocess failed. Please try again."),
+            2200,
+            1400);
+    }
+
     QString ocrError;
     OcrWordResult ocrResult = dependencies_.recognizeSingleWord(preprocessed, tessdataDir, &ocrError);
     if (!ocrResult.success) {

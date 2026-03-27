@@ -38,6 +38,7 @@
 - `AiAssistServiceTest` 新增 AI 降级场景回归：配置无效返回 `InvalidConfiguration`、请求超时返回 `Timeout`，并验证超时后服务仍保持可用。
 - 提取 AppController 的 AI 触发决策为 `AiAssistPolicy`，并新增 `AiAssistPolicyTest` 覆盖“触发/跳过/错误态/词源回退”分支；其中明确约束 `DICT_UNAVAILABLE` 等非 `FOUND` 路径即使 AI 不可用也应静默跳过。
 - 新增可复用测试夹具 `LookupCoordinatorFixture`（`tests/support/LookupCoordinatorFixture.h`），并在 `LookupCoordinatorTest` 复用默认样本与依赖桩，降低主链路异常用例维护成本。
+- `LookupCoordinator` 新增预处理空图防御：当预处理结果为空时直接返回 `OCR_FAILED`，并阻断后续 OCR 调用；对应回归测试已补齐。
 
 ## 未完成
 
