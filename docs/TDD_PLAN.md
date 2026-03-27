@@ -77,9 +77,9 @@
 - [x] 为 `ResultCardWidget` 增加关键行为测试（贴边回正、超时隐藏、内容扩展后回正）。
 - [x] 建立最小 UI smoke 测试，确保关键窗口可创建与销毁。
 
-### P4（待开始）CI 分层门禁
+### P4（进行中）CI 分层门禁
 
-- [ ] PR 必跑：`unit + integration`。
+- [x] PR 必跑：`unit + integration`。
 - [ ] 夜间/发布前：`ui + e2e smoke`。
 - [ ] 失败归因模板与回滚策略文档化。
 
@@ -98,6 +98,7 @@
 - 2026-03-27：P2 新增“识别失败且错误文案为空”回归测试，锁定默认降级提示文案行为。
 - 2026-03-27：启动 P3：新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke，用例覆盖窗口显示字段与自动隐藏基础行为。
 - 2026-03-27：P3 补齐 `ResultCardWidget` 关键行为断言：贴边回正与 AI 内容扩展后回正，完成 UI 最小自动化集。
+- 2026-03-27：启动 P4：新增 GitHub Actions 工作流 `.github/workflows/ci-unit-integration.yml`，对 PR/main push 执行 `unit + integration` 分层门禁。
 
 ## 4. 本轮完成后更新规则
 
