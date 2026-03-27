@@ -199,8 +199,11 @@ QString buildLoadingDotsHtml(const int frame) {
     QString dots;
     for (int i = 0; i < 3; ++i) {
         const bool active = i == frame % 3;
-        dots += QStringLiteral("<span style=\"display:inline-block; width:9px; text-align:center; font-size:12px; font-weight:700; opacity:%1;\">.</span>")
-                    .arg(active ? QStringLiteral("1.0") : QStringLiteral("0.30"));
+        dots += QStringLiteral(
+                    "<span style=\"display:inline-block; width:10px; text-align:center; font-weight:800; line-height:13px; font-size:%1px; vertical-align:%2; opacity:%3;\">.</span>")
+                    .arg(active ? QStringLiteral("15") : QStringLiteral("12"),
+                         active ? QStringLiteral("super") : QStringLiteral("baseline"),
+                         active ? QStringLiteral("1.0") : QStringLiteral("0.30"));
         if (i != 2) {
             dots += QStringLiteral("&nbsp;");
         }
