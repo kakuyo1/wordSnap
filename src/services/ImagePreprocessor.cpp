@@ -16,6 +16,22 @@ QImage ImagePreprocessor::preprocessForWordRecognition(const QImage& source) con
     const int scaledHeight = qMax(1, gray.height() * 2);
     gray = gray.scaled(scaledWidth, scaledHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
+    int minLuminance = 255;
+    int maxLuminance = 0;
+    for (int y = 0; y < gray.height(); ++y) {
+        const uchar* srcLine = gray.constScanLine(y);
+        for (int x = 0; x < gray.width(); ++x) {
+            const int value = srcLine[x];
+            minLuminance = qMin(minLuminance, value);
+            maxLuminance = qMax(maxLuminance, value);
+        }
+    }
+
+    int threshold = 165;
+    if (maxLuminance - minLuminance >= 10) {
+        threshold = (minLuminance + maxLuminance) / 2;
+    }
+
     QImage binary(gray.size(), QImage::Format_Grayscale8);
     binary.fill(255);
 
@@ -23,7 +39,7 @@ QImage ImagePreprocessor::preprocessForWordRecognition(const QImage& source) con
         const uchar* srcLine = gray.constScanLine(y);
         uchar* dstLine = binary.scanLine(y);
         for (int x = 0; x < gray.width(); ++x) {
-            dstLine[x] = srcLine[x] < 165 ? 0 : 255;
+            dstLine[x] = srcLine[x] <= threshold ? 0 : 255;
         }
     }
 

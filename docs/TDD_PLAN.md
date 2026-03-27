@@ -15,6 +15,7 @@
   - `QueryHistoryServiceTest`
   - `AiAssistServiceTest`
   - `AiAssistPolicyTest`
+  - `ImagePreprocessorTest`
   - `ResultCardWidgetTest`
   - `E2eSmokeTest`
 - 现状问题：
@@ -85,6 +86,16 @@
   - [x] 已新增 nightly/workflow_dispatch 工作流，执行 `ui` 与 `e2e` 标签测试。
 - [x] 失败归因模板与回滚策略文档化。
 
+### P5（进行中）OCR 鲁棒性最小闭环
+
+- [x] 新增 `ImagePreprocessorTest`（`unit`）覆盖预处理基础契约：
+  - 空输入返回空图；
+  - 低对比度文本经预处理后仍保留前景/背景可分离性。
+- [x] 调整 `ImagePreprocessor` 二值化策略：
+  - 在固定阈值基础上，按图像亮度范围自适应计算阈值（`(min + max) / 2`）；
+  - 低对比度文本场景优先保证文本不被整体抹白。
+- [ ] 下一步：补齐 `OcrService` 可测边界（启动失败、超时、空输出）并规划可注入进程执行器，继续按 TDD 推进。
+
 ## 3. 当前迭代执行记录
 
 - 2026-03-27：初始化 TDD 文档体系（P0 完成）。
@@ -104,6 +115,7 @@
 - 2026-03-27：P4 新增 `.github/workflows/nightly-ui-e2e-smoke.yml`，按夜间与手动触发执行 UI smoke，并在存在 e2e 测试时补跑 e2e smoke。
 - 2026-03-27：P4 新增 `docs/CI_FAILURE_PLAYBOOK.md`，固化 CI 失败归因模板与回滚执行策略。
 - 2026-03-27：P4 新增 `E2eSmokeTest` 并接入 `e2e` 标签，形成 `unit/integration/ui/e2e` 分层测试闭环。
+- 2026-03-27：启动 P5：新增 `ImagePreprocessorTest` 并引入自适应二值化阈值，提升低对比度 OCR 预处理鲁棒性。
 
 ## 4. 本轮完成后更新规则
 

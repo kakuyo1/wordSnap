@@ -46,6 +46,7 @@
 - 新增夜间 smoke 工作流 `nightly-ui-e2e-smoke.yml`：按计划任务/手动触发执行 `ui` 标签测试，并在存在 `e2e` 标签测试时自动补跑 `e2e`。
 - 新增 `docs/CI_FAILURE_PLAYBOOK.md`：统一 CI 失败归因记录字段、排查命令与回滚策略，形成标准化处置闭环。
 - 新增 `E2eSmokeTest`（`e2e` 标签）并打通夜间 smoke 触发链路，当前分层标签已覆盖 `unit/integration/ui/e2e`。
+- 新增 `ImagePreprocessorTest`（`unit`）并将 OCR 预处理二值化升级为“固定阈值 + 亮度范围自适应阈值”，提升低对比度文本保真度。
 
 ## 未完成
 

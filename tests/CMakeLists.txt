@@ -57,6 +57,11 @@ add_wordsnap_test(AiAssistPolicyTest unit
     ../src/app/AiAssistPolicy.cpp
 )
 
+add_wordsnap_test(ImagePreprocessorTest unit
+    ImagePreprocessorTest.cpp
+    ../src/services/ImagePreprocessor.cpp
+)
+
 add_wordsnap_test(ResultCardWidgetTest ui
     ResultCardWidgetTest.cpp
     ../src/ui/ResultCardWidget.cpp
