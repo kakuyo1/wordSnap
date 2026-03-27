@@ -20,6 +20,54 @@
 #include <algorithm>
 
 namespace {
+constexpr int kCardEdgeMargin = 8;
+
+QRect availableAreaForPoint(const QPoint& globalPos) {
+    QScreen* screen = QGuiApplication::screenAt(globalPos);
+    if (screen == nullptr) {
+        screen = QGuiApplication::primaryScreen();
+    }
+
+    if (screen != nullptr) {
+        return screen->availableGeometry();
+    }
+
+    return QRect(globalPos.x() - 800, globalPos.y() - 600, 1600, 1200);
+}
+
+QPoint clampTopLeftToArea(QPoint topLeft, const QSize& cardSize, const QRect& area) {
+    const int minX = area.left() + kCardEdgeMargin;
+    const int minY = area.top() + kCardEdgeMargin;
+    const int maxX = area.right() - cardSize.width() - kCardEdgeMargin + 1;
+    const int maxY = area.bottom() - cardSize.height() - kCardEdgeMargin + 1;
+
+    if (maxX >= minX) {
+        topLeft.setX(std::clamp(topLeft.x(), minX, maxX));
+    } else {
+        topLeft.setX(minX);
+    }
+
+    if (maxY >= minY) {
+        topLeft.setY(std::clamp(topLeft.y(), minY, maxY));
+    } else {
+        topLeft.setY(minY);
+    }
+
+    return topLeft;
+}
+
+void keepWidgetInsideCurrentScreen(QWidget* widget) {
+    if (widget == nullptr) {
+        return;
+    }
+
+    const QRect area = availableAreaForPoint(widget->frameGeometry().center());
+    const QPoint clampedPos = clampTopLeftToArea(widget->pos(), widget->size(), area);
+    if (clampedPos != widget->pos()) {
+        widget->move(clampedPos);
+    }
+}
+
 QString normalizedStatusCode(QString statusCode) {
     statusCode = statusCode.trimmed().toUpper();
     return statusCode.isEmpty() ? QStringLiteral("FOUND") : statusCode;
@@ -287,28 +335,13 @@ void ResultCardWidget::showMessage(const QString& statusCode,
 
     adjustSize();
 
-    QScreen* screen = QGuiApplication::screenAt(anchorGlobalPos);
-    if (screen == nullptr) {
-        screen = QGuiApplication::primaryScreen();
-    }
-
-    const QRect area = screen != nullptr
-                           ? screen->availableGeometry()
-                           : QRect(anchorGlobalPos.x() - 800, anchorGlobalPos.y() - 600, 1600, 1200);
+    const QRect area = availableAreaForPoint(anchorGlobalPos);
 
     QPoint target = anchorGlobalPos + QPoint(14, 18);
-    if (target.x() + width() > area.right() - 8) {
-        target.setX(area.right() - width() - 8);
-    }
-    if (target.y() + height() > area.bottom() - 8) {
+    if (target.y() + height() > area.bottom() - kCardEdgeMargin) {
         target.setY(anchorGlobalPos.y() - height() - 18);
     }
-    if (target.x() < area.left() + 8) {
-        target.setX(area.left() + 8);
-    }
-    if (target.y() < area.top() + 8) {
-        target.setY(area.top() + 8);
-    }
+    target = clampTopLeftToArea(target, size(), area);
 
     const QPoint popStart = target + QPoint(0, 9);
     move(popStart);
@@ -396,6 +429,7 @@ void ResultCardWidget::showAiText(const QString& text, const int autoHideMs) {
     aiLabel_->setText(text.trimmed());
     aiLabel_->show();
     adjustSize();
+    keepWidgetInsideCurrentScreen(this);
 
     if (autoHideTimer_ == nullptr) {
         return;
@@ -415,6 +449,7 @@ void ResultCardWidget::updateAiLoadingFrame() {
     ++aiLoadingFrame_;
     aiLabel_->setText(buildAiLoadingGridHtml(aiLoadingFrame_, cardStyle_));
     adjustSize();
+    keepWidgetInsideCurrentScreen(this);
 }
 
 void ResultCardWidget::onAutoHideTimeout() {
