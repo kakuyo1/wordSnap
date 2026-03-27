@@ -21,16 +21,17 @@
 - 结果卡片支持风格切换（Kraft paper / White paper / Glassmorphism / Terminal），并支持运行时应用。
 - 设置项新增 `ResultCardStyle` 与 `QueryHistoryLimit` 并持久化。
 - 新增查询历史 V1（JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条裁剪）。
-- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest`。
+- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest` / `AiAssistServiceTest`。
 - 接入 AI Assist（DeepSeek OpenAI-Compatible）：设置页新增 AI 配置，启动校验无效配置并自动降级。
 - 查词流程改为“两阶段渲染”：先展示基础词典结果，再异步请求 AI 并在卡片底部回填。
-- 新增 `AiAssistServiceTest`，覆盖配置校验、结构化解析、字段长度约束与关闭态降级。
 - 设置页新增结果卡片持续时间（ms）配置，并持久化到本地设置。
 - 结果卡片自动隐藏逻辑支持悬停保持：超时时若鼠标在卡片内则保持显示，移出后自动关闭。
 - 结果卡片会在单屏可用区域内自动回正：智能选择锚点象限并在越界时平滑回正，避免窗口被屏幕边缘裁切。
 - 移除 display mode 后，设置持久化层会在保存时自动清理历史遗留键 `display_mode`。
 - 结果卡片主题实现已从 `ResultCardWidget` 抽离到 `src/ui/theme/` 模块，便于后续扩展与维护。
-- 新增 White paper 结果卡片风格：极简白纸基底、右上卷角、纸面纹理与柔和阴影高光。
+- 新增 White paper 结果卡片风格：极简白纸基底、作业本横线、纸面纹理与柔和阴影高光（无卷角）。
+- 新增 TDD 文档与协作约束：`docs/TDD_CORE.md`（核心原则）与 `docs/TDD_PLAN.md`（滚动计划），并在 `AGENTS.md` 固化执行口径。
+- CTest 测试支持按标签分层运行（`unit` / `integration`），并补充 `LookupCoordinatorTest` 关键失败分支覆盖。
 
 ## 未完成
 

@@ -6,6 +6,9 @@
 
 - 所有回答使用中文
 - 每一轮回答后若涉及到有关文档，则需要对该文档进行更新
+- 每次单独修改/增加模块产生的规划md文件默认写到docs/Temp下，这些文件不允许上传到远端仓库
+- 每完成一轮代码修改后，按当前变更整理并提交一条本地 commit（默认不 push）
+- 后续功能/修复默认遵循 TDD（以 `docs/TDD_CORE.md` 为准），并实时更新 `docs/TDD_PLAN.md`
 
 ## 1. 规则来源与优先级
 
@@ -35,11 +38,12 @@
 
 ## 4. Agent 标准工作流（建议）
 
-1. 先读需求与相关代码，再做最小改动方案。
+1. 先读需求、`docs/TDD_CORE.md`、`docs/TDD_PLAN.md` 与相关代码，再做最小改动方案。
 2. 优先保持现有行为兼容，除非需求明确要求改行为。
-3. 改代码后先构建；若涉及测试逻辑则再运行测试。
-4. 同步更新文档（`README.md` / `AGENTS.md` / `docs/*`）。
-5. 输出时写清：改了什么、为什么改、如何验证。
+3. 按 `Red -> Green -> Refactor` 执行：先写失败测试，再实现，再重构。
+4. 改代码后先构建，再运行相关自动化测试（至少覆盖本次改动影响面）。
+5. 同步更新文档（`README.md` / `AGENTS.md` / `docs/*`，且 `TDD_PLAN` 必须更新进度）。
+6. 输出时写清：改了什么、为什么改、如何验证。
 
 ## 5. 构建与运行命令
 
@@ -83,18 +87,23 @@ cmake --build build
 
 当前现状：
 
-- 尚未接入自动化测试 target。
-- `ctest` 会返回 “No tests were found”。
+- 已接入 CTest，当前已有 6 个测试 target（详见 `tests/`）。
+- TDD 核心原则见 `docs/TDD_CORE.md`，滚动实施计划见 `docs/TDD_PLAN.md`。
 
-目标策略：优先补齐可单独运行的模块级单测（TDD 化）。
-
-测试接入后统一命令：
+统一命令：
 
 ```powershell
 ctest --test-dir build --output-on-failure
 ```
 
-单测（必须支持）：
+按层运行（推荐）：
+
+```powershell
+ctest --test-dir build -C Debug -L unit --output-on-failure
+ctest --test-dir build -C Debug -L integration --output-on-failure
+```
+
+单测（必须支持，示例）：
 
 ```powershell
 ctest --test-dir build -R "^WordNormalizerTest$" --output-on-failure

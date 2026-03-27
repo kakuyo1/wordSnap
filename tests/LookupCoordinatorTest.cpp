@@ -8,12 +8,32 @@ class LookupCoordinatorTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void runReturnsOcrFailedWhenPipelineDependenciesMissing();
     void runReturnsOcrFailedWhenCaptureIsEmpty();
     void runReturnsOcrFailedWhenRecognizerFails();
+    void runReturnsOcrFailedWhenNormalizedCandidateIsEmpty();
     void runReturnsDictUnavailableWhenBackendIsNotReady();
     void runReturnsUnknownWhenDictionaryMissesWord();
     void runBuildsFoundResultAndExtractsInlinePhonetic();
 };
+
+void LookupCoordinatorTest::runReturnsOcrFailedWhenPipelineDependenciesMissing() {
+    LookupCoordinator coordinator(LookupCoordinator::Dependencies{});
+
+    const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
+    QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.queryWord, QString());
+    QCOMPARE(result.tooltipText,
+             QStringLiteral("OCR_FAILED | Internal pipeline is not configured."));
+    QCOMPARE(result.cardTitle, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.cardBody, QStringLiteral("Internal pipeline is not configured."));
+    QCOMPARE(result.trayMessage,
+             QStringLiteral("OCR_FAILED | Internal pipeline is not configured."));
+    QCOMPARE(result.cardTimeoutMs, 2600);
+    QCOMPARE(result.trayTimeoutMs, 2200);
+}
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenCaptureIsEmpty() {
     bool preprocessCalled = false;
@@ -106,6 +126,52 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {
     QCOMPARE(result.cardTimeoutMs, 2600);
     QCOMPARE(result.trayTimeoutMs, 2200);
     QVERIFY(!normalizeCalled);
+}
+
+void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateIsEmpty() {
+    bool dictionaryReadyCalled = false;
+
+    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
+        [](const QRect&) {
+            return QImage(4, 4, QImage::Format_ARGB32);
+        },
+        [](const QImage& image) {
+            return image;
+        },
+        [](const QImage&, const QString&, QString*) {
+            OcrWordResult result;
+            result.success = true;
+            result.rawText = QStringLiteral("1234");
+            return result;
+        },
+        [](const QString&) {
+            return QString();
+        },
+        [&]() {
+            dictionaryReadyCalled = true;
+            return true;
+        },
+        [](const QString&) {
+            DictionaryEntry entry;
+            entry.found = true;
+            return entry;
+        },
+    });
+
+    const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
+    QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.queryWord, QString());
+    QCOMPARE(result.tooltipText,
+             QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
+    QCOMPARE(result.cardTitle, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.cardBody, QStringLiteral("OCR text is not a valid word candidate."));
+    QCOMPARE(result.trayMessage,
+             QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
+    QCOMPARE(result.cardTimeoutMs, 2200);
+    QCOMPARE(result.trayTimeoutMs, 1700);
+    QVERIFY(!dictionaryReadyCalled);
 }
 
 void LookupCoordinatorTest::runReturnsDictUnavailableWhenBackendIsNotReady() {
