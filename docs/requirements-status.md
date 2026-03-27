@@ -35,6 +35,7 @@
 - `LookupCoordinator` 在归一化与结果展示链路增加空白防御：查词入参会使用去空白词，词典 `headword` 展示前会去空白，避免误判与文案异常。
 - 新增 `LookupCoordinatorTest` 异常组合回归用例，覆盖“归一化结果含空白”“词典 headword 含空白”两条链路。
 - `LookupCoordinator` 对“归一化结果含内部空白”的候选词直接判定为无效（`OCR_FAILED`），并阻断后续词典查询链路。
+- `AiAssistServiceTest` 新增 AI 降级场景回归：配置无效返回 `InvalidConfiguration`、请求超时返回 `Timeout`，并验证超时后服务仍保持可用。
 
 ## 未完成
 
