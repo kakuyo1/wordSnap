@@ -32,8 +32,6 @@ QString aiTextColorForStyle(const ResultCardStyle style) {
         return QStringLiteral("#ecf6ff");
     case ResultCardStyle::Terminal:
         return QStringLiteral("#92f5aa");
-    case ResultCardStyle::Clay:
-        return QStringLiteral("#7a4d47");
     }
 
     return QStringLiteral("#333333");
@@ -47,8 +45,6 @@ QString aiGridLineColorForStyle(const ResultCardStyle style) {
         return QStringLiteral("rgba(194, 222, 245, 128)");
     case ResultCardStyle::Terminal:
         return QStringLiteral("rgba(77, 191, 109, 165)");
-    case ResultCardStyle::Clay:
-        return QStringLiteral("rgba(209, 145, 135, 140)");
     }
 
     return QStringLiteral("rgba(0, 0, 0, 80)");
@@ -62,8 +58,6 @@ QString etymologyHighlightColorForStyle(const ResultCardStyle style) {
         return QStringLiteral("rgba(134, 178, 221, 145)");
     case ResultCardStyle::Terminal:
         return QStringLiteral("rgba(31, 88, 44, 216)");
-    case ResultCardStyle::Clay:
-        return QStringLiteral("rgba(242, 196, 186, 185)");
     }
 
     return QStringLiteral("rgba(210, 210, 210, 150)");
@@ -270,46 +264,6 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  background: transparent;"
             "  border: none;"
             "}");
-    case ResultCardStyle::Clay:
-        return QStringLiteral(
-            "QLabel#statusLabel {"
-            "  padding: 3px 9px;"
-            "  border-radius: 11px;"
-            "  font-family: 'Segoe UI Semibold', 'Microsoft YaHei UI';"
-            "  font-size: 10px;"
-            "  color: #7f3e37;"
-            "  background: rgba(255, 215, 208, 230);"
-            "}"
-            "QLabel#headwordLabel {"
-            "  font-family: 'Trebuchet MS', 'Segoe UI', 'Microsoft YaHei UI';"
-            "  font-size: 21px;"
-            "  font-weight: 800;"
-            "  color: #7c4138;"
-            "}"
-            "QLabel#phoneticLabel {"
-            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
-            "  font-size: 12px;"
-            "  font-weight: 600;"
-            "  color: #9f5f57;"
-            "  padding: 1px 7px 2px 7px;"
-            "  border-radius: 9px;"
-            "  background: rgba(250, 214, 207, 206);"
-            "  border: 1px solid rgba(205, 147, 137, 170);"
-            "}"
-            "QLabel#bodyLabel {"
-            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
-            "  font-size: 13px;"
-            "  color: #6d4b45;"
-            "}"
-            "QLabel#aiLabel {"
-            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
-            "  font-size: 12px;"
-            "  color: #7a4d47;"
-            "  margin-top: 2px;"
-            "  padding: 0;"
-            "  background: transparent;"
-            "  border: none;"
-            "}");
     }
 
     return QString();
@@ -410,34 +364,6 @@ void paintTerminal(QPainter* painter, const QRectF& cardRect) {
     }
 }
 
-void paintClay(QPainter* painter, const QRectF& cardRect) {
-    constexpr qreal kRadius = 20.0;
-
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(QColor(173, 123, 116, 55));
-    painter->drawRoundedRect(cardRect.adjusted(-2.0, 5.0, 5.0, 9.0), kRadius + 2.0, kRadius + 2.0);
-
-    QLinearGradient baseGradient(cardRect.topLeft(), cardRect.bottomLeft());
-    baseGradient.setColorAt(0.0, QColor(255, 236, 229));
-    baseGradient.setColorAt(0.56, QColor(251, 220, 210));
-    baseGradient.setColorAt(1.0, QColor(242, 198, 186));
-
-    painter->setPen(QPen(QColor(237, 186, 175, 220), 1.1));
-    painter->setBrush(baseGradient);
-    painter->drawRoundedRect(cardRect, kRadius, kRadius);
-
-    const QRectF highlightRect = cardRect.adjusted(7.0, 6.0, -8.0, -cardRect.height() * 0.45);
-    QLinearGradient highlightGradient(highlightRect.topLeft(), highlightRect.bottomLeft());
-    highlightGradient.setColorAt(0.0, QColor(255, 252, 250, 165));
-    highlightGradient.setColorAt(1.0, QColor(255, 252, 250, 8));
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(highlightGradient);
-    painter->drawRoundedRect(highlightRect, 14.0, 14.0);
-
-    painter->setPen(QPen(QColor(221, 158, 146, 180), 1.2));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRoundedRect(cardRect.adjusted(2.5, 2.5, -2.5, -2.5), kRadius - 2.0, kRadius - 2.0);
-}
 } // namespace
 
 ResultCardWidget::ResultCardWidget(QWidget* parent)
@@ -556,9 +482,6 @@ void ResultCardWidget::paintEvent(QPaintEvent* event) {
         break;
     case ResultCardStyle::Terminal:
         paintTerminal(&painter, cardRect);
-        break;
-    case ResultCardStyle::Clay:
-        paintClay(&painter, cardRect);
         break;
     }
 }

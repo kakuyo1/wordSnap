@@ -18,7 +18,7 @@
 - 实现 `SettingsDialog`（热键、词典目录、tessdata 目录可编辑并落盘）。
 - 增强 Tesseract 路径探测与错误提示（应用目录、环境变量、PATH、常见安装目录）。
 - 结果状态统一为 `FOUND` / `OCR_FAILED` / `UNKNOWN` / `DICT_UNAVAILABLE`，卡片与托盘文案一致。
-- 结果卡片支持风格切换（Kraft paper / Glassmorphism / Terminal / Clay），并支持运行时应用。
+- 结果卡片支持风格切换（Kraft paper / Glassmorphism / Terminal），并支持运行时应用。
 - 设置项新增 `ResultCardStyle` 与 `QueryHistoryLimit` 并持久化。
 - 新增查询历史 V1（JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条裁剪）。
 - 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest`。

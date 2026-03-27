@@ -8,8 +8,7 @@
 enum class ResultCardStyle {
     KraftPaper,
     Glassmorphism,
-    Terminal,
-    Clay
+    Terminal
 };
 
 constexpr int kMinResultCardOpacityPercent = 35;
@@ -117,8 +116,6 @@ inline QString resultCardStyleToString(const ResultCardStyle style) {
         return QStringLiteral("glassmorphism");
     case ResultCardStyle::Terminal:
         return QStringLiteral("terminal");
-    case ResultCardStyle::Clay:
-        return QStringLiteral("clay");
     }
 
     return QStringLiteral("kraft_paper");
@@ -132,9 +129,6 @@ inline ResultCardStyle resultCardStyleFromString(QString value) {
     }
     if (value == QStringLiteral("terminal")) {
         return ResultCardStyle::Terminal;
-    }
-    if (value == QStringLiteral("clay")) {
-        return ResultCardStyle::Clay;
     }
     return ResultCardStyle::KraftPaper;
 }

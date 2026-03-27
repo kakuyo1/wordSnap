@@ -53,7 +53,6 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     resultCardStyleCombo_->addItem(QStringLiteral("Kraft paper"), QStringLiteral("kraft_paper"));
     resultCardStyleCombo_->addItem(QStringLiteral("Glassmorphism"), QStringLiteral("glassmorphism"));
     resultCardStyleCombo_->addItem(QStringLiteral("Terminal"), QStringLiteral("terminal"));
-    resultCardStyleCombo_->addItem(QStringLiteral("Clay"), QStringLiteral("clay"));
     const int styleIndex = resultCardStyleCombo_->findData(resultCardStyleToString(initialSettings.resultCardStyle));
     if (styleIndex >= 0) {
         resultCardStyleCombo_->setCurrentIndex(styleIndex);
