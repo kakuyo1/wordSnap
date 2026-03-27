@@ -114,13 +114,14 @@ void moveWidgetWithBufferAnimation(QWidget* widget,
     animation->setEasingCurve(QEasingCurve::OutCubic);
 
     const QPoint startPos = widget->pos();
-    const QPoint delta = targetPos - startPos;
-    const QPoint settlePos(
-        targetPos.x() + (delta.x() == 0 ? 0 : (delta.x() > 0 ? 4 : -4)),
-        targetPos.y() + (delta.y() == 0 ? 0 : (delta.y() > 0 ? 4 : -4)));
+    const int travelDistance = std::abs(targetPos.x() - startPos.x())
+                               + std::abs(targetPos.y() - startPos.y());
+    if (travelDistance <= 8) {
+        widget->move(targetPos);
+        return;
+    }
 
     animation->setStartValue(startPos);
-    animation->setKeyValueAt(0.82, settlePos);
     animation->setEndValue(targetPos);
     animation->start();
 }
@@ -197,11 +198,9 @@ QString buildAiGridHtml(const AiAssistContent& content, const ResultCardStyle st
 QString buildLoadingDotsHtml(const int frame) {
     QString dots;
     for (int i = 0; i < 3; ++i) {
-        if (i == frame % 3) {
-            dots += QStringLiteral("<span style=\"font-size:16px; font-weight:800; vertical-align:super;\">.</span>");
-        } else {
-            dots += QStringLiteral("<span style=\"font-size:11px; opacity:0.35;\">.</span>");
-        }
+        const bool active = i == frame % 3;
+        dots += QStringLiteral("<span style=\"display:inline-block; width:9px; text-align:center; font-size:12px; font-weight:700; opacity:%1;\">.</span>")
+                    .arg(active ? QStringLiteral("1.0") : QStringLiteral("0.30"));
         if (i != 2) {
             dots += QStringLiteral("&nbsp;");
         }
@@ -523,8 +522,6 @@ void ResultCardWidget::updateAiLoadingFrame() {
 
     ++aiLoadingFrame_;
     aiLabel_->setText(buildAiLoadingGridHtml(aiLoadingFrame_, cardStyle_));
-    adjustSize();
-    keepWidgetInsideCurrentScreen(this, popInAnimation_, false);
 }
 
 void ResultCardWidget::onAutoHideTimeout() {

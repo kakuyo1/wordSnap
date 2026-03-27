@@ -34,6 +34,7 @@ private slots:
     void showMessageAutoHideEventuallyHidesWidget();
     void showMessageClampsCardInsideAvailableArea();
     void showAiContentRepositionsCardInsideAvailableArea();
+    void showAiLoadingKeepsStableGeometryAwayFromEdges();
 };
 
 void ResultCardWidgetTest::showMessageRendersBasicFields() {
@@ -151,6 +152,43 @@ void ResultCardWidgetTest::showAiContentRepositionsCardInsideAvailableArea() {
     const QRect area = availableAreaForWidget(widget);
     QVERIFY(area.isValid());
     QTRY_VERIFY(area.contains(widget.frameGeometry()));
+}
+
+void ResultCardWidgetTest::showAiLoadingKeepsStableGeometryAwayFromEdges() {
+    ResultCardWidget widget;
+
+    QScreen* primary = QGuiApplication::primaryScreen();
+    QVERIFY(primary != nullptr);
+    const QRect primaryArea = primary->availableGeometry();
+    const QPoint anchor = primaryArea.center();
+
+    widget.showMessage(
+        QStringLiteral("FOUND"),
+        QStringLiteral("run"),
+        QStringLiteral("to move fast"),
+        QStringLiteral("[r\u028cn]"),
+        anchor,
+        0);
+
+    QTRY_VERIFY(widget.isVisible());
+    waitForCardAnimationToSettle();
+
+    const QRect safeArea = primaryArea.adjusted(80, 80, -80, -80);
+    QVERIFY(safeArea.contains(widget.frameGeometry()));
+
+    widget.showAiLoading();
+
+    auto* aiLabel = widget.findChild<QLabel*>(QStringLiteral("aiLabel"));
+    QVERIFY(aiLabel != nullptr);
+    QTRY_VERIFY(aiLabel->isVisible());
+    waitForCardAnimationToSettle();
+
+    const QRect initialGeometry = widget.frameGeometry();
+    QTest::qWait(680);
+    const QRect finalGeometry = widget.frameGeometry();
+
+    QCOMPARE(finalGeometry.topLeft(), initialGeometry.topLeft());
+    QCOMPARE(finalGeometry.size(), initialGeometry.size());
 }
 
 QTEST_MAIN(ResultCardWidgetTest)

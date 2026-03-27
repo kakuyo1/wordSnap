@@ -133,6 +133,7 @@
 - 2026-03-27：P5 扩展 `OcrServiceTest`：补齐 `tessdataDir` 参数组装断言，覆盖 `eng.traineddata` 存在/缺失两条分支。
 - 2026-03-27：P5 扩展 `OcrServiceTest`：新增“非零退出 + 空 stderr”回归，锁定默认错误文案 `Tesseract process failed.`。
 - 2026-03-27：P5 在 `LookupCoordinatorTest` 增加链路完整性断言，确保“OCR 失败默认提示”场景经过预处理与识别阶段后再降级返回。
+- 2026-03-27：P3 回归修复：优化 `ResultCardWidget` 回正动画与 AI loading 动效，消除非边界场景下卡片颤动；新增 UI 用例断言 loading 期间几何稳定。
 
 ## 4. 本轮完成后更新规则
 
