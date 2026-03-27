@@ -16,8 +16,9 @@
   - `AiAssistServiceTest`
   - `AiAssistPolicyTest`
   - `ResultCardWidgetTest`
+  - `E2eSmokeTest`
 - 现状问题：
-  - 测试分层标签尚未覆盖 e2e。
+  - 分层标签已覆盖 `unit/integration/ui/e2e`，仍需扩大每层用例规模。
   - 主链路编排仍有边界路径覆盖不足。
   - UI 自动化目前为最小回归集，复杂交互覆盖仍可扩展。
 
@@ -77,11 +78,11 @@
 - [x] 为 `ResultCardWidget` 增加关键行为测试（贴边回正、超时隐藏、内容扩展后回正）。
 - [x] 建立最小 UI smoke 测试，确保关键窗口可创建与销毁。
 
-### P4（进行中）CI 分层门禁
+### P4（已完成）CI 分层门禁
 
 - [x] PR 必跑：`unit + integration`。
-- [ ] 夜间/发布前：`ui + e2e smoke`。
-  - [x] 已新增 nightly/workflow_dispatch 工作流，执行 `ui` 标签测试并在存在 `e2e` 标签测试时自动执行。
+- [x] 夜间/发布前：`ui + e2e smoke`。
+  - [x] 已新增 nightly/workflow_dispatch 工作流，执行 `ui` 与 `e2e` 标签测试。
 - [x] 失败归因模板与回滚策略文档化。
 
 ## 3. 当前迭代执行记录
@@ -102,6 +103,7 @@
 - 2026-03-27：启动 P4：新增 GitHub Actions 工作流 `.github/workflows/ci-unit-integration.yml`，对 PR/main push 执行 `unit + integration` 分层门禁。
 - 2026-03-27：P4 新增 `.github/workflows/nightly-ui-e2e-smoke.yml`，按夜间与手动触发执行 UI smoke，并在存在 e2e 测试时补跑 e2e smoke。
 - 2026-03-27：P4 新增 `docs/CI_FAILURE_PLAYBOOK.md`，固化 CI 失败归因模板与回滚执行策略。
+- 2026-03-27：P4 新增 `E2eSmokeTest` 并接入 `e2e` 标签，形成 `unit/integration/ui/e2e` 分层测试闭环。
 
 ## 4. 本轮完成后更新规则
 

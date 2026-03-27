@@ -62,3 +62,11 @@ add_wordsnap_test(ResultCardWidgetTest ui
     ../src/ui/ResultCardWidget.cpp
     ../src/ui/theme/ResultCardTheme.cpp
 )
+
+add_wordsnap_test(E2eSmokeTest e2e
+    E2eSmokeTest.cpp
+    ../src/app/LookupCoordinator.cpp
+    ../src/services/PhoneticExtractor.cpp
+    ../src/ui/ResultCardWidget.cpp
+    ../src/ui/theme/ResultCardTheme.cpp
+)
