@@ -41,6 +41,7 @@
 - 新增可复用测试夹具 `LookupCoordinatorFixture`（`tests/support/LookupCoordinatorFixture.h`），并在 `LookupCoordinatorTest` 复用默认样本与依赖桩，降低主链路异常用例维护成本。
 - `LookupCoordinator` 新增预处理空图防御：当预处理结果为空时直接返回 `OCR_FAILED`，并阻断后续 OCR 调用；对应回归测试已补齐。
 - 新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke 回归：覆盖结果卡片基础字段渲染与自动隐藏行为，确保关键窗口创建/显示/销毁主流程可回归验证。
+- `ResultCardWidgetTest` 追加关键行为回归：覆盖贴边回正与 AI 内容扩展后的回正断言，防止浮层因尺寸变化越界。
 
 ## 未完成
 
