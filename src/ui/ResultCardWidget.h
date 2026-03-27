@@ -46,10 +46,13 @@ private:
     QPropertyAnimation* fadeInAnimation_{nullptr};
     QPropertyAnimation* popInAnimation_{nullptr};
     QTimer* autoHideTimer_{nullptr};
+    QTimer* aiLoadingTimer_{nullptr};
     int lastAutoHideMs_{kDefaultResultCardDurationMs};
+    int aiLoadingFrame_{0};
     bool pendingHideOnLeave_{false};
 
     void showAiText(const QString& text, int autoHideMs);
+    void updateAiLoadingFrame();
     void onAutoHideTimeout();
     void applyTheme();
 };

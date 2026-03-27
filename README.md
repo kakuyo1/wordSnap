@@ -10,7 +10,7 @@
 - 结果卡片支持四种风格（Kraft paper / Glassmorphism / Terminal / Clay）、透明度与持续时间设置。
 - 结果状态统一为 `FOUND` / `OCR_FAILED` / `UNKNOWN` / `DICT_UNAVAILABLE`，卡片与托盘文案保持一致。
 - 已支持查询历史 V1：本地 JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条限制（默认 300，可配置）。
-- 已支持 AI Assist（DeepSeek OpenAI-Compatible）：查词结果先展示基础词典，随后异步补充 `definition_en / roots / etymology`。
+- 已支持 AI Assist（DeepSeek OpenAI-Compatible）：查词结果先展示基础词典，随后异步补充三栏 AI 速记区（`Definition / Roots / Etymology`）。
 - 设置页可配置热键、显示模式、词典目录、tessdata 目录、卡片风格、透明度、持续时间、历史条数上限、AI 开关/API Key/Endpoint/Model/Timeout。
 - 启动时可自动探测 Tesseract 路径并给出可读错误提示。
 
@@ -79,7 +79,7 @@ cmake --build build
 2. 默认热键为 `Shift+Alt+S`（失败时会尝试回退为 `Ctrl+Alt+S`）。
 3. 按热键后框选目标区域，系统自动执行 OCR + 查词。
 4. 查询结果会通过结果卡片、Tooltip、托盘消息呈现。
-5. 若 AI Assist 已启用且配置有效，结果卡片底部会在基础结果后异步显示 AI 内容。
+5. 若 AI Assist 已启用且配置有效，结果卡片底部会先显示跳跃式加载占位，再异步替换为 `Definition / Roots / Etymology` 三栏内容。
 6. 结果卡片到达持续时间后，若鼠标悬停在卡片上会保持显示；鼠标移出后自动关闭。
 7. 可在托盘 `Settings` 中调整主要参数。
 
