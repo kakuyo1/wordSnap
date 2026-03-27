@@ -7,6 +7,7 @@
 // Result card visual style.
 enum class ResultCardStyle {
     KraftPaper,
+    WhitePaper,
     Glassmorphism,
     Terminal
 };
@@ -112,6 +113,8 @@ inline QString resultCardStyleToString(const ResultCardStyle style) {
     switch (style) {
     case ResultCardStyle::KraftPaper:
         return QStringLiteral("kraft_paper");
+    case ResultCardStyle::WhitePaper:
+        return QStringLiteral("white_paper");
     case ResultCardStyle::Glassmorphism:
         return QStringLiteral("glassmorphism");
     case ResultCardStyle::Terminal:
@@ -124,6 +127,9 @@ inline QString resultCardStyleToString(const ResultCardStyle style) {
 // Parses result card style from settings string.
 inline ResultCardStyle resultCardStyleFromString(QString value) {
     value = value.trimmed().toLower();
+    if (value == QStringLiteral("white_paper")) {
+        return ResultCardStyle::WhitePaper;
+    }
     if (value == QStringLiteral("glassmorphism")) {
         return ResultCardStyle::Glassmorphism;
     }

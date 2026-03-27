@@ -51,6 +51,7 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     hotkeyEdit_->setClearButtonEnabled(true);
 
     resultCardStyleCombo_->addItem(QStringLiteral("Kraft paper"), QStringLiteral("kraft_paper"));
+    resultCardStyleCombo_->addItem(QStringLiteral("White paper"), QStringLiteral("white_paper"));
     resultCardStyleCombo_->addItem(QStringLiteral("Glassmorphism"), QStringLiteral("glassmorphism"));
     resultCardStyleCombo_->addItem(QStringLiteral("Terminal"), QStringLiteral("terminal"));
     const int styleIndex = resultCardStyleCombo_->findData(resultCardStyleToString(initialSettings.resultCardStyle));
