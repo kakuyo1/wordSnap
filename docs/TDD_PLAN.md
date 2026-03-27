@@ -101,7 +101,10 @@
   - 正常退出但输出为空；
   - 正常返回文本并去空白。
 - [x] 为 `OcrService` 引入可注入进程执行器（`ProcessRunner`），将外部进程调用与结果判定解耦，便于 TDD 下稳定模拟失败路径。
-- [ ] 下一步：在编排层补齐“预处理低对比度成功 + OCR 失败降级文案”组合链路断言，继续扩大 P5 覆盖面。
+- [x] 补齐 `OcrService` 参数组装回归（`unit`）：
+  - `tessdataDir` 存在 `eng.traineddata` 时应附加 `--tessdata-dir` 参数；
+  - `eng.traineddata` 缺失时不应附加该参数。
+- [ ] 下一步：在编排层补齐“预处理低对比度成功 + OCR 失败降级文案”组合链路断言，并评估 `resolveTesseractExecutable` 探测路径的可测抽离。
 
 ## 3. 当前迭代执行记录
 
@@ -124,6 +127,7 @@
 - 2026-03-27：P4 新增 `E2eSmokeTest` 并接入 `e2e` 标签，形成 `unit/integration/ui/e2e` 分层测试闭环。
 - 2026-03-27：启动 P5：新增 `ImagePreprocessorTest` 并引入自适应二值化阈值，提升低对比度 OCR 预处理鲁棒性。
 - 2026-03-27：P5 继续推进：新增 `OcrServiceTest`，并将 `OcrService` 进程调用抽象为可注入 `ProcessRunner`，完成 OCR 启动失败/超时/空输出/成功输出边界回归。
+- 2026-03-27：P5 扩展 `OcrServiceTest`：补齐 `tessdataDir` 参数组装断言，覆盖 `eng.traineddata` 存在/缺失两条分支。
 
 ## 4. 本轮完成后更新规则
 

@@ -1,5 +1,9 @@
 #include <QtTest/QtTest>
 
+#include <QDir>
+#include <QFile>
+#include <QTemporaryDir>
+
 #include "services/OcrService.h"
 
 namespace {
@@ -18,6 +22,8 @@ private slots:
     void recognizeFailsWhenProcessTimesOut();
     void recognizeFailsWhenOcrReturnsNoText();
     void recognizeSucceedsWhenOcrReturnsText();
+    void recognizeAddsTessdataArgumentWhenEngModelExists();
+    void recognizeSkipsTessdataArgumentWhenEngModelMissing();
 };
 
 void OcrServiceTest::recognizeFailsWhenProcessDoesNotStart() {
@@ -87,6 +93,63 @@ void OcrServiceTest::recognizeSucceedsWhenOcrReturnsText() {
     QVERIFY(result.success);
     QCOMPARE(result.rawText, QStringLiteral("Hello"));
     QVERIFY(errorMessage.isEmpty());
+}
+
+void OcrServiceTest::recognizeAddsTessdataArgumentWhenEngModelExists() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString trainedDataPath = QDir(tempDir.path()).filePath(QStringLiteral("eng.traineddata"));
+    QFile trainedDataFile(trainedDataPath);
+    QVERIFY(trainedDataFile.open(QIODevice::WriteOnly));
+    trainedDataFile.write("mock");
+    trainedDataFile.close();
+
+    QStringList capturedArguments;
+    const OcrService service([&capturedArguments](const QString&, const QStringList& arguments, int, int) {
+        capturedArguments = arguments;
+        OcrService::ProcessRunResult runResult;
+        runResult.started = true;
+        runResult.finished = true;
+        runResult.normalExit = true;
+        runResult.exitCode = 0;
+        runResult.standardOutput = QStringLiteral("run");
+        return runResult;
+    });
+
+    QString errorMessage;
+    const OcrWordResult result = service.recognizeSingleWord(makeTinyImage(), tempDir.path(), &errorMessage);
+
+    QVERIFY(result.success);
+    QVERIFY(errorMessage.isEmpty());
+
+    const int tessdataArgIndex = capturedArguments.indexOf(QStringLiteral("--tessdata-dir"));
+    QVERIFY(tessdataArgIndex >= 0);
+    QCOMPARE(capturedArguments.value(tessdataArgIndex + 1), tempDir.path());
+}
+
+void OcrServiceTest::recognizeSkipsTessdataArgumentWhenEngModelMissing() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    QStringList capturedArguments;
+    const OcrService service([&capturedArguments](const QString&, const QStringList& arguments, int, int) {
+        capturedArguments = arguments;
+        OcrService::ProcessRunResult runResult;
+        runResult.started = true;
+        runResult.finished = true;
+        runResult.normalExit = true;
+        runResult.exitCode = 0;
+        runResult.standardOutput = QStringLiteral("run");
+        return runResult;
+    });
+
+    QString errorMessage;
+    const OcrWordResult result = service.recognizeSingleWord(makeTinyImage(), tempDir.path(), &errorMessage);
+
+    QVERIFY(result.success);
+    QVERIFY(errorMessage.isEmpty());
+    QCOMPARE(capturedArguments.indexOf(QStringLiteral("--tessdata-dir")), -1);
 }
 
 QTEST_APPLESS_MAIN(OcrServiceTest)

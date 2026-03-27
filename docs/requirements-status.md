@@ -47,7 +47,7 @@
 - 新增 `docs/CI_FAILURE_PLAYBOOK.md`：统一 CI 失败归因记录字段、排查命令与回滚策略，形成标准化处置闭环。
 - 新增 `E2eSmokeTest`（`e2e` 标签）并打通夜间 smoke 触发链路，当前分层标签已覆盖 `unit/integration/ui/e2e`。
 - 新增 `ImagePreprocessorTest`（`unit`）并将 OCR 预处理二值化升级为“固定阈值 + 亮度范围自适应阈值”，提升低对比度文本保真度。
-- 新增 `OcrServiceTest`（`unit`），并为 `OcrService` 引入可注入 `ProcessRunner`，可稳定回归 OCR 启动失败/超时/空输出等边界。
+- 新增 `OcrServiceTest`（`unit`），并为 `OcrService` 引入可注入 `ProcessRunner`，可稳定回归 OCR 启动失败/超时/空输出以及 `tessdataDir` 参数组装分支。
 
 ## 未完成
 
