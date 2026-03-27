@@ -34,6 +34,7 @@ constexpr auto kKeyAiApiKey = "ai_api_key";
 constexpr auto kKeyAiBaseUrl = "ai_base_url";
 constexpr auto kKeyAiModel = "ai_model";
 constexpr auto kKeyAiTimeoutMs = "ai_timeout_ms";
+constexpr auto kLegacyKeyDisplayMode = "display_mode";
 } // namespace
 
 SettingsService::SettingsService(QString organizationName, QString applicationName)
@@ -165,6 +166,7 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.setValue(
         QString::fromLatin1(kKeyAiTimeoutMs),
         clampAiTimeoutMs(appSettings.aiTimeoutMs));
+    settings.remove(QString::fromLatin1(kLegacyKeyDisplayMode));
 
     settings.endGroup();
     settings.sync();
