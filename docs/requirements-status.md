@@ -44,6 +44,7 @@
 - `ResultCardWidgetTest` 追加关键行为回归：覆盖贴边回正与 AI 内容扩展后的回正断言，防止浮层因尺寸变化越界。
 - 新增 GitHub Actions 门禁工作流 `ci-unit-integration.yml`：在 PR 与 `main` push 自动执行构建以及 `unit + integration` 分层测试。
 - 新增夜间 smoke 工作流 `nightly-ui-e2e-smoke.yml`：按计划任务/手动触发执行 `ui` 标签测试，并在存在 `e2e` 标签测试时自动补跑 `e2e`。
+- 新增 `docs/CI_FAILURE_PLAYBOOK.md`：统一 CI 失败归因记录字段、排查命令与回滚策略，形成标准化处置闭环。
 
 ## 未完成
 
