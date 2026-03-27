@@ -21,7 +21,7 @@
 - 结果卡片支持风格切换（Kraft paper / White paper / Glassmorphism / Terminal），并支持运行时应用。
 - 设置项新增 `ResultCardStyle` 与 `QueryHistoryLimit` 并持久化。
 - 新增查询历史 V1（JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条裁剪）。
-- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest` / `AiAssistServiceTest`。
+- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest` / `AiAssistServiceTest` / `AiAssistPolicyTest`。
 - 接入 AI Assist（DeepSeek OpenAI-Compatible）：设置页新增 AI 配置，启动校验无效配置并自动降级。
 - 查词流程改为“两阶段渲染”：先展示基础词典结果，再异步请求 AI 并在卡片底部回填。
 - 设置页新增结果卡片持续时间（ms）配置，并持久化到本地设置。
@@ -37,6 +37,7 @@
 - `LookupCoordinator` 对“归一化结果含内部空白”的候选词直接判定为无效（`OCR_FAILED`），并阻断后续词典查询链路。
 - `AiAssistServiceTest` 新增 AI 降级场景回归：配置无效返回 `InvalidConfiguration`、请求超时返回 `Timeout`，并验证超时后服务仍保持可用。
 - 提取 AppController 的 AI 触发决策为 `AiAssistPolicy`，并新增 `AiAssistPolicyTest` 覆盖“触发/跳过/错误态/词源回退”分支；其中明确约束 `DICT_UNAVAILABLE` 等非 `FOUND` 路径即使 AI 不可用也应静默跳过。
+- `AiAssistPolicy` 上下文由布尔 `lookupFound` 升级为 `lookupStatus`，避免编排映射歧义；`AppController` 直接透传查词状态供策略决策。
 - 新增可复用测试夹具 `LookupCoordinatorFixture`（`tests/support/LookupCoordinatorFixture.h`），并在 `LookupCoordinatorTest` 复用默认样本与依赖桩，降低主链路异常用例维护成本。
 - `LookupCoordinator` 新增预处理空图防御：当预处理结果为空时直接返回 `OCR_FAILED`，并阻断后续 OCR 调用；对应回归测试已补齐。
 

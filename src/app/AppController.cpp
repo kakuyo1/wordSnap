@@ -210,7 +210,7 @@ void AppController::onRegionSelected(const QRect& globalRect) {
     }
 
     const AiAssistPolicy::Decision aiDecision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        result.status == LookupCoordinator::Status::Found,
+        result.status,
         settings_.aiAssistEnabled,
         aiAssistService_->isAvailable(),
         result.cardTitle,

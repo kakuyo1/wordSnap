@@ -1,7 +1,7 @@
 #include "app/AiAssistPolicy.h"
 
 AiAssistPolicy::Decision AiAssistPolicy::decide(const Context& context) {
-    if (!context.lookupFound || !context.aiAssistEnabled) {
+    if (context.lookupStatus != LookupCoordinator::Status::Found || !context.aiAssistEnabled) {
         return Decision{};
     }
 

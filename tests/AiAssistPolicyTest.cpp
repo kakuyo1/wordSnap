@@ -17,7 +17,7 @@ private slots:
 
 void AiAssistPolicyTest::decideReturnsSkipWhenLookupNotFound() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        false,
+        LookupCoordinator::Status::Unknown,
         true,
         true,
         QStringLiteral("run"),
@@ -30,7 +30,7 @@ void AiAssistPolicyTest::decideReturnsSkipWhenLookupNotFound() {
 
 void AiAssistPolicyTest::decideReturnsSkipWhenLookupNotFoundEvenIfServiceUnavailable() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        false,
+        LookupCoordinator::Status::DictUnavailable,
         true,
         false,
         QStringLiteral("run"),
@@ -43,7 +43,7 @@ void AiAssistPolicyTest::decideReturnsSkipWhenLookupNotFoundEvenIfServiceUnavail
 
 void AiAssistPolicyTest::decideReturnsSkipWhenFeatureDisabled() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        true,
+        LookupCoordinator::Status::Found,
         false,
         true,
         QStringLiteral("run"),
@@ -56,7 +56,7 @@ void AiAssistPolicyTest::decideReturnsSkipWhenFeatureDisabled() {
 
 void AiAssistPolicyTest::decideReturnsShowErrorWhenServiceUnavailable() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        true,
+        LookupCoordinator::Status::Found,
         true,
         false,
         QStringLiteral("run"),
@@ -69,7 +69,7 @@ void AiAssistPolicyTest::decideReturnsShowErrorWhenServiceUnavailable() {
 
 void AiAssistPolicyTest::decideReturnsShowErrorWhenRequestWordEmpty() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        true,
+        LookupCoordinator::Status::Found,
         true,
         true,
         QStringLiteral("   "),
@@ -82,7 +82,7 @@ void AiAssistPolicyTest::decideReturnsShowErrorWhenRequestWordEmpty() {
 
 void AiAssistPolicyTest::decideUsesTrimmedCardTitleFirst() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        true,
+        LookupCoordinator::Status::Found,
         true,
         true,
         QStringLiteral("  running  "),
@@ -95,7 +95,7 @@ void AiAssistPolicyTest::decideUsesTrimmedCardTitleFirst() {
 
 void AiAssistPolicyTest::decideFallsBackToTrimmedQueryWord() {
     const AiAssistPolicy::Decision decision = AiAssistPolicy::decide(AiAssistPolicy::Context{
-        true,
+        LookupCoordinator::Status::Found,
         true,
         true,
         QString(),

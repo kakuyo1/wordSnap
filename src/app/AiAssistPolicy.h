@@ -2,6 +2,8 @@
 
 #include <QString>
 
+#include "app/LookupCoordinator.h"
+
 class AiAssistPolicy final {
 public:
     enum class Action {
@@ -11,7 +13,7 @@ public:
     };
 
     struct Context {
-        bool lookupFound{false};
+        LookupCoordinator::Status lookupStatus{LookupCoordinator::Status::OcrFailed};
         bool aiAssistEnabled{false};
         bool aiServiceAvailable{false};
         QString cardTitle;

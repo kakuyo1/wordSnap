@@ -14,6 +14,7 @@
   - `LookupCoordinatorTest`
   - `QueryHistoryServiceTest`
   - `AiAssistServiceTest`
+  - `AiAssistPolicyTest`
 - 现状问题：
   - 测试分层标签不完整（unit/integration/ui/e2e 未明确）。
   - 主链路编排仍有边界路径覆盖不足。
@@ -55,7 +56,10 @@
   - 功能关闭 -> `Disabled`；
   - 配置无效 -> `InvalidConfiguration`；
   - 请求超时 -> `Timeout`，且服务可用性不被永久置为不可用。
-- [ ] 增加“词典不可用 + AI 降级”在编排层（AppController）的链路断言。
+- [x] 增加“词典不可用 + AI 降级”在编排层（AppController）的链路断言：
+  - `AiAssistPolicy::Context` 由 `lookupStatus`（而非布尔值）驱动；
+  - `DICT_UNAVAILABLE` + AI 服务不可用场景在策略测试中断言为静默跳过；
+  - `AppController` 将 `LookupCoordinator::Result::status` 直接透传给策略。
 - [x] 提取并覆盖 AI 请求决策策略（`AiAssistPolicy`）：
   - 非 `FOUND` 结果不触发 AI；
   - 即使 AI 服务不可用，非 `FOUND`（如 `DICT_UNAVAILABLE`）仍应静默跳过；
@@ -88,6 +92,7 @@
 - 2026-03-27：P2 提取 `AiAssistPolicy` 并新增 `AiAssistPolicyTest`，将 AppController 的 AI 触发分支收敛为可单测策略。
 - 2026-03-27：P2 新增 `LookupCoordinatorFixture` 测试夹具并在 `LookupCoordinatorTest` 复用，降低后续异常链路用例编写成本。
 - 2026-03-27：P2 新增“预处理结果为空”回归测试并修复 `LookupCoordinator`：预处理失败时直接 `OCR_FAILED` 且阻断 OCR 调用。
+- 2026-03-27：P2 将 AI 策略上下文从 `lookupFound` 升级为 `lookupStatus`，补齐 `DICT_UNAVAILABLE + AI 不可用` 的编排层断言。
 
 ## 4. 本轮完成后更新规则
 
