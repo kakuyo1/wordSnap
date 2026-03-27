@@ -103,6 +103,7 @@ wordSnapV1/
     platform/win/
     services/
     ui/
+      theme/
   docs/
     TODOLIST.md
     PLAN.md

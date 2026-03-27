@@ -1,6 +1,6 @@
 # wordSnapV1 架构说明
 
-更新时间：2026-03-26
+更新时间：2026-03-27
 
 ## 1. 架构目标
 
@@ -50,6 +50,7 @@ flowchart TB
         U2[CaptureOverlay]
         U3[ResultCardWidget]
         U4[SettingsDialog]
+        U5[theme/ResultCardTheme]
     end
 
     subgraph APP[应用编排层 src/app]
@@ -83,6 +84,7 @@ flowchart TB
     U2 --> A1
     U3 --> A1
     U4 --> A1
+    U5 --> U3
 
     A1 --> S1
     A1 --> S2

@@ -49,6 +49,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/ui/CaptureOverlay.cpp
     src/ui/ResultCardWidget.h
     src/ui/ResultCardWidget.cpp
+    src/ui/theme/ResultCardTheme.h
+    src/ui/theme/ResultCardTheme.cpp
     src/ui/HistoryDialog.h
     src/ui/HistoryDialog.cpp
     src/ui/SettingsDialog.h
