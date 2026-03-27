@@ -195,27 +195,21 @@ QString buildAiGridHtml(const AiAssistContent& content, const ResultCardStyle st
             etymologyCell);
 }
 
-QString buildLoadingDotsHtml(const int frame, const ResultCardStyle style) {
-    const QString activeColor = resultCardTheme::aiTextColorForStyle(style);
-    const QString inactiveColor = resultCardTheme::aiGridLineColorForStyle(style);
-
+QString buildLoadingDotsHtml(const int frame) {
     QString dots;
     for (int i = 0; i < 3; ++i) {
         const bool active = i == frame % 3;
-        const QString marker = active ? QStringLiteral("o") : QStringLiteral(".");
-        dots += QStringLiteral("<span style=\"color:%1;\">%2</span>")
-                    .arg(active ? activeColor : inactiveColor, marker);
+        dots += QStringLiteral("<span style=\"display:inline-block; width:9px; text-align:center; font-size:12px; font-weight:700; opacity:%1;\">.</span>")
+                    .arg(active ? QStringLiteral("1.0") : QStringLiteral("0.30"));
         if (i != 2) {
             dots += QStringLiteral("&nbsp;");
         }
     }
-
-    return QStringLiteral("<span style=\"font-size:12px; font-weight:700; font-family:'Consolas','Courier New',monospace; letter-spacing:0.8px;\">%1</span>")
-        .arg(dots);
+    return dots;
 }
 
 QString buildAiLoadingGridHtml(const int frame, const ResultCardStyle style) {
-    const QString dots = buildLoadingDotsHtml(frame, style);
+    const QString dots = buildLoadingDotsHtml(frame);
     const QString shimmerLine = QStringLiteral(
         "<div style=\"margin:3px 0 5px 0; border-top:1px solid %1;\"></div>")
                                    .arg(resultCardTheme::aiGridLineColorForStyle(style));
