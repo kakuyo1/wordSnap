@@ -42,10 +42,7 @@
 - `LookupCoordinator` 新增预处理空图防御：当预处理结果为空时直接返回 `OCR_FAILED`，并阻断后续 OCR 调用；对应回归测试已补齐。
 - 新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke 回归：覆盖结果卡片基础字段渲染与自动隐藏行为，确保关键窗口创建/显示/销毁主流程可回归验证。
 - `ResultCardWidgetTest` 追加关键行为回归：覆盖贴边回正与 AI 内容扩展后的回正断言，防止浮层因尺寸变化越界。
-- 新增 GitHub Actions 门禁工作流 `ci-unit-integration.yml`：在 PR 与 `main` push 自动执行构建以及 `unit + integration` 分层测试。
-- 新增夜间 smoke 工作流 `nightly-ui-e2e-smoke.yml`：按计划任务/手动触发执行 `ui` 标签测试，并在存在 `e2e` 标签测试时自动补跑 `e2e`。
-- 新增 `docs/CI_FAILURE_PLAYBOOK.md`：统一 CI 失败归因记录字段、排查命令与回滚策略，形成标准化处置闭环。
-- 新增 `E2eSmokeTest`（`e2e` 标签）并打通夜间 smoke 触发链路，当前分层标签已覆盖 `unit/integration/ui/e2e`。
+- 新增 `E2eSmokeTest`（`e2e` 标签），当前分层标签已覆盖 `unit/integration/ui/e2e`。
 - 新增 `ImagePreprocessorTest`（`unit`）并将 OCR 预处理二值化升级为“固定阈值 + 亮度范围自适应阈值”，提升低对比度文本保真度。
 - 新增 `OcrServiceTest`（`unit`），并为 `OcrService` 引入可注入 `ProcessRunner`，可稳定回归 OCR 启动失败/超时/非零退出默认错误文案/空输出，以及 `tessdataDir` 参数组装分支。
 - 将 Tesseract 路径探测逻辑抽离为 `TesseractExecutableResolver`，并在 `OcrServiceTest` 增加应用目录优先、环境变量/PATH 回退与命令兜底分支回归。

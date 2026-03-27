@@ -81,12 +81,10 @@
 - [x] 为 `ResultCardWidget` 增加关键行为测试（贴边回正、超时隐藏、内容扩展后回正）。
 - [x] 建立最小 UI smoke 测试，确保关键窗口可创建与销毁。
 
-### P4（已完成）CI 分层门禁
+### P4（已取消）CI 分层门禁
 
-- [x] PR 必跑：`unit + integration`。
-- [x] 夜间/发布前：`ui + e2e smoke`。
-  - [x] 已新增 nightly/workflow_dispatch 工作流，执行 `ui` 与 `e2e` 标签测试。
-- [x] 失败归因模板与回滚策略文档化。
+- [x] 已按当前项目策略移除 GitHub Actions 工作流（`ci-unit-integration` / `nightly-ui-e2e-smoke`）。
+- [x] 同步清理 CI 工作流相关文档描述，避免后续执行预期偏差。
 
 ### P5（进行中）OCR 鲁棒性最小闭环
 
@@ -132,9 +130,6 @@
 - 2026-03-27：P2 新增“识别失败且错误文案为空”回归测试，锁定默认降级提示文案行为。
 - 2026-03-27：启动 P3：新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke，用例覆盖窗口显示字段与自动隐藏基础行为。
 - 2026-03-27：P3 补齐 `ResultCardWidget` 关键行为断言：贴边回正与 AI 内容扩展后回正，完成 UI 最小自动化集。
-- 2026-03-27：启动 P4：新增 GitHub Actions 工作流 `.github/workflows/ci-unit-integration.yml`，对 PR/main push 执行 `unit + integration` 分层门禁。
-- 2026-03-27：P4 新增 `.github/workflows/nightly-ui-e2e-smoke.yml`，按夜间与手动触发执行 UI smoke，并在存在 e2e 测试时补跑 e2e smoke。
-- 2026-03-27：P4 新增 `docs/CI_FAILURE_PLAYBOOK.md`，固化 CI 失败归因模板与回滚执行策略。
 - 2026-03-27：P4 新增 `E2eSmokeTest` 并接入 `e2e` 标签，形成 `unit/integration/ui/e2e` 分层测试闭环。
 - 2026-03-27：启动 P5：新增 `ImagePreprocessorTest` 并引入自适应二值化阈值，提升低对比度 OCR 预处理鲁棒性。
 - 2026-03-27：P5 继续推进：新增 `OcrServiceTest`，并将 `OcrService` 进程调用抽象为可注入 `ProcessRunner`，完成 OCR 启动失败/超时/空输出/成功输出边界回归。
@@ -149,6 +144,7 @@
 - 2026-03-27：P3 UI 缺陷修复（非 TDD）：修复 AI loading 动效不可见问题（由透明度动画在 QLabel 富文本中表现不稳定导致），改为“颜色 + 字符位移帧”方案；验证方式为本地构建通过与手工 UI 观察。
 - 2026-03-27：P3 UI 调整（非 TDD）：按产品反馈撤回“颜色 + 字符位移帧”方案，恢复原始三点透明度 loading 动画；验证方式为本地构建通过与手工 UI 观察。
 - 2026-03-27：P3 UI 调整（非 TDD）：增强三点 loading 的跳跃感，活动点恢复“上浮+放大”效果，同时保持卡片几何稳定策略；验证方式为本地构建通过与手工 UI 观察。
+- 2026-03-27：按当前项目策略移除 GitHub Actions 工作流 `ci-unit-integration` 与 `nightly-ui-e2e-smoke`，并清理 `README` / `requirements-status` / `TDD_PLAN` 中相关说明。
 
 ## 4. 本轮完成后更新规则
 

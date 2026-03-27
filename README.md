@@ -91,7 +91,6 @@ cmake --build build
 - `docs/requirements-status.md`：需求完成度对照。
 - `docs/TDD_CORE.md`：TDD 核心原则。
 - `docs/TDD_PLAN.md`：TDD 滚动执行计划与阶段进度。
-- `docs/CI_FAILURE_PLAYBOOK.md`：CI 失败归因与回滚模板。
 - `AGENTS.md`：面向编码 Agent 的协作规范。
 
 ## 8. 目录结构
