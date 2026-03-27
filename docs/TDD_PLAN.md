@@ -20,9 +20,10 @@
   - `ResultCardWidgetTest`
   - `E2eSmokeTest`
 - 现状问题：
-  - 分层标签已覆盖 `unit/integration/ui/e2e`，仍需扩大每层用例规模。
+  - 分层标签已覆盖 `unit/integration/ui/e2e`，后续按风险增量补测，避免低价值测试膨胀。
   - 主链路编排仍有边界路径覆盖不足。
   - UI 自动化目前为最小回归集，复杂交互覆盖仍可扩展。
+  - 自 2026-03-27 起执行“先评估再 TDD”：UI/样式改动默认不强制自动化测试。
 
 ## 2. 分阶段计划（持续滚动）
 
@@ -144,6 +145,7 @@
 - 2026-03-27：P5 将 Tesseract 可执行探测抽离为 `TesseractExecutableResolver`，在 `OcrServiceTest` 新增环境变量/PATH/兜底命令回归，降低路径探测改动回归风险。
 - 2026-03-27：P5 继续扩展 `OcrServiceTest`：补齐 discovered 可执行路径优先级与常见安装目录命中分支，完善路径探测决策回归矩阵。
 - 2026-03-27：P5 补齐 `TESSERACT_PATH` 兼容回归：环境变量直接给出 `tesseract.exe` 文件路径时可被正确识别。
+- 2026-03-27：调整 TDD 执行口径：改为“先评估再 TDD”，核心逻辑优先 TDD，UI/样式类改动可采用手工验证并在计划中留痕。
 
 ## 4. 本轮完成后更新规则
 
