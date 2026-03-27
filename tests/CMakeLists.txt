@@ -62,6 +62,11 @@ add_wordsnap_test(ImagePreprocessorTest unit
     ../src/services/ImagePreprocessor.cpp
 )
 
+add_wordsnap_test(OcrServiceTest unit
+    OcrServiceTest.cpp
+    ../src/services/OcrService.cpp
+)
+
 add_wordsnap_test(ResultCardWidgetTest ui
     ResultCardWidgetTest.cpp
     ../src/ui/ResultCardWidget.cpp

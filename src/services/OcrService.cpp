@@ -8,7 +8,38 @@
 #include <QStandardPaths>
 #include <QTemporaryFile>
 
+#include <utility>
+
 namespace {
+OcrService::ProcessRunResult runWithQProcess(const QString& executable,
+                                             const QStringList& arguments,
+                                             const int startTimeoutMs,
+                                             const int finishTimeoutMs) {
+    OcrService::ProcessRunResult runResult;
+
+    QProcess process;
+    process.start(executable, arguments, QIODevice::ReadOnly);
+    if (!process.waitForStarted(startTimeoutMs)) {
+        runResult.startError = process.errorString();
+        return runResult;
+    }
+
+    runResult.started = true;
+    if (!process.waitForFinished(finishTimeoutMs)) {
+        process.kill();
+        process.waitForFinished(1000);
+        runResult.finished = false;
+        return runResult;
+    }
+
+    runResult.finished = true;
+    runResult.normalExit = process.exitStatus() == QProcess::NormalExit;
+    runResult.exitCode = process.exitCode();
+    runResult.standardError = QString::fromUtf8(process.readAllStandardError()).trimmed();
+    runResult.standardOutput = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+    return runResult;
+}
+
 QString executableFromPathEntry(const QString& rawEntry) {
     const QString entry = rawEntry.trimmed();
     if (entry.isEmpty()) {
@@ -81,6 +112,17 @@ QString resolveTesseractExecutable() {
 }
 } // namespace
 
+OcrService::OcrService()
+    : processRunner_(runWithQProcess) {
+}
+
+OcrService::OcrService(ProcessRunner processRunner)
+    : processRunner_(std::move(processRunner)) {
+    if (!processRunner_) {
+        processRunner_ = runWithQProcess;
+    }
+}
+
 OcrWordResult OcrService::recognizeSingleWord(const QImage& image,
                                               const QString& tessdataDir,
                                               QString* errorMessage) const {
@@ -111,7 +153,6 @@ OcrWordResult OcrService::recognizeSingleWord(const QImage& image,
         return result;
     }
 
-    QProcess process;
     QStringList arguments;
     arguments << imagePath << QStringLiteral("stdout") << QStringLiteral("--psm") << QStringLiteral("8")
               << QStringLiteral("-l") << QStringLiteral("eng");
@@ -126,28 +167,26 @@ OcrWordResult OcrService::recognizeSingleWord(const QImage& image,
     }
 
     const QString executable = resolveTesseractExecutable();
-    process.start(executable, arguments, QIODevice::ReadOnly);
-    if (!process.waitForStarted(3000)) {
+    const ProcessRunResult runResult = processRunner_(executable, arguments, 3000, 12000);
+    if (!runResult.started) {
         if (errorMessage != nullptr) {
             *errorMessage = QStringLiteral("Tesseract did not start. Tried: %1 | Qt: %2 | Ensure PATH contains the Tesseract folder, not tesseract.exe.")
-                                .arg(executable, process.errorString());
+                                .arg(executable, runResult.startError);
         }
         return result;
     }
 
-    if (!process.waitForFinished(12000)) {
-        process.kill();
-        process.waitForFinished(1000);
+    if (!runResult.finished) {
         if (errorMessage != nullptr) {
             *errorMessage = QStringLiteral("Tesseract timed out.");
         }
         return result;
     }
 
-    const QString stderrText = QString::fromUtf8(process.readAllStandardError()).trimmed();
-    const QString stdoutText = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+    const QString stderrText = runResult.standardError.trimmed();
+    const QString stdoutText = runResult.standardOutput.trimmed();
 
-    if (process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
+    if (!runResult.normalExit || runResult.exitCode != 0) {
         if (errorMessage != nullptr) {
             *errorMessage = stderrText.isEmpty()
                                 ? QStringLiteral("Tesseract process failed.")

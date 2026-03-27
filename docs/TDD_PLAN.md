@@ -16,6 +16,7 @@
   - `AiAssistServiceTest`
   - `AiAssistPolicyTest`
   - `ImagePreprocessorTest`
+  - `OcrServiceTest`
   - `ResultCardWidgetTest`
   - `E2eSmokeTest`
 - 现状问题：
@@ -94,7 +95,13 @@
 - [x] 调整 `ImagePreprocessor` 二值化策略：
   - 在固定阈值基础上，按图像亮度范围自适应计算阈值（`(min + max) / 2`）；
   - 低对比度文本场景优先保证文本不被整体抹白。
-- [ ] 下一步：补齐 `OcrService` 可测边界（启动失败、超时、空输出）并规划可注入进程执行器，继续按 TDD 推进。
+- [x] 补齐 `OcrService` 可测边界（`unit`）：
+  - 进程启动失败；
+  - 进程超时；
+  - 正常退出但输出为空；
+  - 正常返回文本并去空白。
+- [x] 为 `OcrService` 引入可注入进程执行器（`ProcessRunner`），将外部进程调用与结果判定解耦，便于 TDD 下稳定模拟失败路径。
+- [ ] 下一步：在编排层补齐“预处理低对比度成功 + OCR 失败降级文案”组合链路断言，继续扩大 P5 覆盖面。
 
 ## 3. 当前迭代执行记录
 
@@ -116,6 +123,7 @@
 - 2026-03-27：P4 新增 `docs/CI_FAILURE_PLAYBOOK.md`，固化 CI 失败归因模板与回滚执行策略。
 - 2026-03-27：P4 新增 `E2eSmokeTest` 并接入 `e2e` 标签，形成 `unit/integration/ui/e2e` 分层测试闭环。
 - 2026-03-27：启动 P5：新增 `ImagePreprocessorTest` 并引入自适应二值化阈值，提升低对比度 OCR 预处理鲁棒性。
+- 2026-03-27：P5 继续推进：新增 `OcrServiceTest`，并将 `OcrService` 进程调用抽象为可注入 `ProcessRunner`，完成 OCR 启动失败/超时/空输出/成功输出边界回归。
 
 ## 4. 本轮完成后更新规则
 
