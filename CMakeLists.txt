@@ -20,6 +20,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/main.cpp
     src/app/AppController.h
     src/app/AppController.cpp
+    src/app/AiAssistPolicy.h
+    src/app/AiAssistPolicy.cpp
     src/app/LookupCoordinator.h
     src/app/LookupCoordinator.cpp
     src/app/AppTypes.h

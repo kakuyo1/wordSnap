@@ -55,7 +55,15 @@
   - 配置无效 -> `InvalidConfiguration`；
   - 请求超时 -> `Timeout`，且服务可用性不被永久置为不可用。
 - [ ] 增加“词典不可用 + AI 降级”在编排层（AppController）的链路断言。
-- [ ] 建立最小测试数据夹具（可复用样本）。
+- [x] 提取并覆盖 AI 请求决策策略（`AiAssistPolicy`）：
+  - 非 `FOUND` 结果不触发 AI；
+  - 即使 AI 服务不可用，非 `FOUND`（如 `DICT_UNAVAILABLE`）仍应静默跳过；
+  - 功能关闭时静默跳过；
+  - 服务不可用或请求词为空时返回错误态；
+  - `cardTitle` 优先、`queryWord` 回退并统一去空白。
+- [x] 建立最小测试数据夹具（可复用样本）：
+  - 新增 `tests/support/LookupCoordinatorFixture.h` 统一提供默认 OCR/归一化/词典样本与依赖桩；
+  - `LookupCoordinatorTest` 关键分支改为复用该夹具，减少重复搭桩噪音。
 
 ### P3（待开始）UI/行为自动化最小集
 
@@ -76,6 +84,8 @@
 - 2026-03-27：P2 首批完成：新增 `LookupCoordinator` 空白输入链路回归测试并修复对应实现。
 - 2026-03-27：P2 继续推进：新增“归一化结果含内部空白”回归测试，修复后确保不会误入词典查询。
 - 2026-03-27：P2 新增 `AiAssistServiceTest` 降级场景覆盖（Disabled/InvalidConfiguration/Timeout）。
+- 2026-03-27：P2 提取 `AiAssistPolicy` 并新增 `AiAssistPolicyTest`，将 AppController 的 AI 触发分支收敛为可单测策略。
+- 2026-03-27：P2 新增 `LookupCoordinatorFixture` 测试夹具并在 `LookupCoordinatorTest` 复用，降低后续异常链路用例编写成本。
 
 ## 4. 本轮完成后更新规则
 

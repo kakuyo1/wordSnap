@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QToolTip>
 
+#include "app/AiAssistPolicy.h"
 #include "app/LookupCoordinator.h"
 #include "services/AiAssistService.h"
 #include "platform/win/GlobalHotkeyManager.h"
@@ -24,6 +25,8 @@
 #include "ui/TrayController.h"
 
 namespace {
+const QString kAiFallbackMessage = QStringLiteral("AI 获取失败，不影响基础查词。");
+
 void appendWarningMessage(QString* warningMessage, const QString& warning) {
     if (warningMessage == nullptr || warning.isEmpty()) {
         return;
@@ -202,30 +205,28 @@ void AppController::onRegionSelected(const QRect& globalRect) {
         result.cardBody,
         result.cardPhonetic);
 
-    if (result.status != LookupCoordinator::Status::Found || aiAssistService_ == nullptr || resultCardWidget_ == nullptr) {
+    if (aiAssistService_ == nullptr || resultCardWidget_ == nullptr) {
         return;
     }
 
-    if (!settings_.aiAssistEnabled) {
+    const AiAssistPolicy::Decision aiDecision = AiAssistPolicy::decide(AiAssistPolicy::Context{
+        result.status == LookupCoordinator::Status::Found,
+        settings_.aiAssistEnabled,
+        aiAssistService_->isAvailable(),
+        result.cardTitle,
+        result.queryWord,
+    });
+
+    if (aiDecision.action == AiAssistPolicy::Action::Skip) {
         return;
     }
-
-    if (!aiAssistService_->isAvailable()) {
-        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
-        return;
-    }
-
-    QString aiWord = result.cardTitle.trimmed();
-    if (aiWord.isEmpty()) {
-        aiWord = result.queryWord.trimmed();
-    }
-    if (aiWord.isEmpty()) {
-        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
+    if (aiDecision.action == AiAssistPolicy::Action::ShowError) {
+        resultCardWidget_->showAiError(kAiFallbackMessage);
         return;
     }
 
     resultCardWidget_->showAiLoading();
-    aiAssistService_->requestWordAssist(aiWord, [this, lookupToken](const AiAssistService::Result& aiResult) {
+    aiAssistService_->requestWordAssist(aiDecision.requestWord, [this, lookupToken](const AiAssistService::Result& aiResult) {
         if (lookupToken != activeLookupToken_ || resultCardWidget_ == nullptr) {
             return;
         }
@@ -235,7 +236,7 @@ void AppController::onRegionSelected(const QRect& globalRect) {
             return;
         }
 
-        resultCardWidget_->showAiError(QStringLiteral("AI 获取失败，不影响基础查词。"));
+        resultCardWidget_->showAiError(kAiFallbackMessage);
     });
 }
 

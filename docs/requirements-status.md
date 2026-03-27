@@ -36,6 +36,8 @@
 - 新增 `LookupCoordinatorTest` 异常组合回归用例，覆盖“归一化结果含空白”“词典 headword 含空白”两条链路。
 - `LookupCoordinator` 对“归一化结果含内部空白”的候选词直接判定为无效（`OCR_FAILED`），并阻断后续词典查询链路。
 - `AiAssistServiceTest` 新增 AI 降级场景回归：配置无效返回 `InvalidConfiguration`、请求超时返回 `Timeout`，并验证超时后服务仍保持可用。
+- 提取 AppController 的 AI 触发决策为 `AiAssistPolicy`，并新增 `AiAssistPolicyTest` 覆盖“触发/跳过/错误态/词源回退”分支；其中明确约束 `DICT_UNAVAILABLE` 等非 `FOUND` 路径即使 AI 不可用也应静默跳过。
+- 新增可复用测试夹具 `LookupCoordinatorFixture`（`tests/support/LookupCoordinatorFixture.h`），并在 `LookupCoordinatorTest` 复用默认样本与依赖桩，降低主链路异常用例维护成本。
 
 ## 未完成
 

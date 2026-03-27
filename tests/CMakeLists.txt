@@ -50,3 +50,8 @@ add_wordsnap_test(AiAssistServiceTest unit
     AiAssistServiceTest.cpp
     ../src/services/AiAssistService.cpp
 )
+
+add_wordsnap_test(AiAssistPolicyTest unit
+    AiAssistPolicyTest.cpp
+    ../src/app/AiAssistPolicy.cpp
+)

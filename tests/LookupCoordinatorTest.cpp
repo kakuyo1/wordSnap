@@ -3,6 +3,7 @@
 #include <QImage>
 
 #include "app/LookupCoordinator.h"
+#include "support/LookupCoordinatorFixture.h"
 
 class LookupCoordinatorTest : public QObject {
     Q_OBJECT
@@ -39,34 +40,9 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenPipelineDependenciesMissing()
 }
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenCaptureIsEmpty() {
-    bool preprocessCalled = false;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage();
-        },
-        [&](const QImage&) {
-            preprocessCalled = true;
-            return QImage(2, 2, QImage::Format_ARGB32);
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("hello");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("hello");
-        },
-        []() {
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.capturedImage = QImage();
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result =
         coordinator.run(QRect(10, 20, 30, 40), QString());
@@ -80,41 +56,14 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenCaptureIsEmpty() {
     QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | Capture failed. Please try again."));
     QCOMPARE(result.cardTimeoutMs, 2200);
     QCOMPARE(result.trayTimeoutMs, 1400);
-    QVERIFY(!preprocessCalled);
+    QVERIFY(!fixture.preprocessCalled);
 }
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {
-    bool normalizeCalled = false;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString* errorMessage) {
-            if (errorMessage != nullptr) {
-                *errorMessage = QStringLiteral("engine unavailable");
-            }
-
-            OcrWordResult result;
-            result.success = false;
-            return result;
-        },
-        [&](const QString&) {
-            normalizeCalled = true;
-            return QStringLiteral("hello");
-        },
-        []() {
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.success = false;
+    fixture.ocrError = QStringLiteral("engine unavailable");
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result =
         coordinator.run(QRect(0, 0, 20, 20), QString());
@@ -128,38 +77,14 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {
     QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | engine unavailable"));
     QCOMPARE(result.cardTimeoutMs, 2600);
     QCOMPARE(result.trayTimeoutMs, 2200);
-    QVERIFY(!normalizeCalled);
+    QVERIFY(!fixture.normalizeCalled);
 }
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateIsEmpty() {
-    bool dictionaryReadyCalled = false;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("1234");
-            return result;
-        },
-        [](const QString&) {
-            return QString();
-        },
-        [&]() {
-            dictionaryReadyCalled = true;
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("1234");
+    fixture.normalizedCandidate.clear();
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
 
@@ -174,38 +99,14 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateIsEmpty() 
              QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
     QCOMPARE(result.cardTimeoutMs, 2200);
     QCOMPARE(result.trayTimeoutMs, 1700);
-    QVERIFY(!dictionaryReadyCalled);
+    QVERIFY(!fixture.dictionaryReadyCalled);
 }
 
 void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateContainsWhitespace() {
-    bool dictionaryReadyCalled = false;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("run fast");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("run fast");
-        },
-        [&]() {
-            dictionaryReadyCalled = true;
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("run fast");
+    fixture.normalizedCandidate = QStringLiteral("run fast");
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
 
@@ -220,80 +121,32 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateContainsWh
              QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
     QCOMPARE(result.cardTimeoutMs, 2200);
     QCOMPARE(result.trayTimeoutMs, 1700);
-    QVERIFY(!dictionaryReadyCalled);
+    QVERIFY(!fixture.dictionaryReadyCalled);
 }
 
 void LookupCoordinatorTest::runTrimsNormalizedCandidateBeforeDictionaryLookup() {
-    QString lookupWord;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("RUN");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("  run  ");
-        },
-        []() {
-            return true;
-        },
-        [&](const QString& word) {
-            lookupWord = word;
-
-            DictionaryEntry entry;
-            if (word == QStringLiteral("run")) {
-                entry.found = true;
-                entry.headword = QStringLiteral("run");
-                entry.definitionsEn.push_back(QStringLiteral("to move fast"));
-            }
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("RUN");
+    fixture.normalizedCandidate = QStringLiteral("  run  ");
+    fixture.dictionaryEntry = LookupCoordinatorFixture::makeFoundEntry(
+        QStringLiteral("run"),
+        QStringLiteral("to move fast"));
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
 
-    QCOMPARE(lookupWord, QStringLiteral("run"));
+    QCOMPARE(fixture.lookupWord, QStringLiteral("run"));
     QCOMPARE(result.status, LookupCoordinator::Status::Found);
     QCOMPARE(result.queryWord, QStringLiteral("run"));
     QCOMPARE(result.cardTitle, QStringLiteral("run"));
 }
 
 void LookupCoordinatorTest::runTrimsDictionaryHeadwordForDisplay() {
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("run");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("run");
-        },
-        []() {
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            entry.headword = QStringLiteral("  run  ");
-            entry.definitionsEn.push_back(QStringLiteral("to move fast"));
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.dictionaryEntry = LookupCoordinatorFixture::makeFoundEntry(
+        QStringLiteral("  run  "),
+        QStringLiteral("to move fast"));
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
 
@@ -303,32 +156,10 @@ void LookupCoordinatorTest::runTrimsDictionaryHeadwordForDisplay() {
 }
 
 void LookupCoordinatorTest::runReturnsDictUnavailableWhenBackendIsNotReady() {
-    bool lookupCalled = false;
-
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("RUN");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("run");
-        },
-        []() {
-            return false;
-        },
-        [&](const QString&) {
-            lookupCalled = true;
-            return DictionaryEntry{};
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("RUN");
+    fixture.dictionaryReady = false;
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result =
         coordinator.run(QRect(0, 0, 20, 20), QString());
@@ -342,33 +173,14 @@ void LookupCoordinatorTest::runReturnsDictUnavailableWhenBackendIsNotReady() {
     QCOMPARE(result.trayMessage, QStringLiteral("DICT_UNAVAILABLE"));
     QCOMPARE(result.cardTimeoutMs, 2600);
     QCOMPARE(result.trayTimeoutMs, 1800);
-    QVERIFY(!lookupCalled);
+    QVERIFY(!fixture.lookupCalled);
 }
 
 void LookupCoordinatorTest::runReturnsUnknownWhenDictionaryMissesWord() {
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("RUN");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("run");
-        },
-        []() {
-            return true;
-        },
-        [](const QString&) {
-            return DictionaryEntry{};
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("RUN");
+    fixture.dictionaryEntry = DictionaryEntry{};
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result =
         coordinator.run(QRect(0, 0, 20, 20), QString());
@@ -385,33 +197,13 @@ void LookupCoordinatorTest::runReturnsUnknownWhenDictionaryMissesWord() {
 }
 
 void LookupCoordinatorTest::runBuildsFoundResultAndExtractsInlinePhonetic() {
-    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
-        [](const QRect&) {
-            return QImage(4, 4, QImage::Format_ARGB32);
-        },
-        [](const QImage& image) {
-            return image;
-        },
-        [](const QImage&, const QString&, QString*) {
-            OcrWordResult result;
-            result.success = true;
-            result.rawText = QStringLiteral("hello");
-            return result;
-        },
-        [](const QString&) {
-            return QStringLiteral("hello");
-        },
-        []() {
-            return true;
-        },
-        [](const QString&) {
-            DictionaryEntry entry;
-            entry.found = true;
-            entry.headword = QStringLiteral("hello");
-            entry.definitionsEn.push_back(QStringLiteral("[həˈləʊ] | interj. used as greeting"));
-            return entry;
-        },
-    });
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.rawText = QStringLiteral("hello");
+    fixture.normalizedCandidate = QStringLiteral("hello");
+    fixture.dictionaryEntry = LookupCoordinatorFixture::makeFoundEntry(
+        QStringLiteral("hello"),
+        QStringLiteral("[həˈləʊ] | interj. used as greeting"));
+    LookupCoordinator coordinator = fixture.createCoordinator();
 
     const LookupCoordinator::Result result =
         coordinator.run(QRect(0, 0, 20, 20), QString());
