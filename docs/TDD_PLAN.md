@@ -105,7 +105,9 @@
 - [x] 补齐 `OcrService` 参数组装回归（`unit`）：
   - `tessdataDir` 存在 `eng.traineddata` 时应附加 `--tessdata-dir` 参数；
   - `eng.traineddata` 缺失时不应附加该参数。
-- [ ] 下一步：在编排层补齐“预处理低对比度成功 + OCR 失败降级文案”组合链路断言，并评估 `resolveTesseractExecutable` 探测路径的可测抽离。
+- [x] 在编排层补齐 OCR 失败默认降级文案组合链路断言：
+  - 识别失败且错误为空时，除默认文案外，明确断言链路已执行到 `preprocess` 与 `recognize`（非前置阶段短路）。
+- [ ] 下一步：评估 `resolveTesseractExecutable` 探测路径的可测抽离，继续补齐环境变量/PATH 分支回归。
 
 ## 3. 当前迭代执行记录
 
@@ -130,6 +132,7 @@
 - 2026-03-27：P5 继续推进：新增 `OcrServiceTest`，并将 `OcrService` 进程调用抽象为可注入 `ProcessRunner`，完成 OCR 启动失败/超时/空输出/成功输出边界回归。
 - 2026-03-27：P5 扩展 `OcrServiceTest`：补齐 `tessdataDir` 参数组装断言，覆盖 `eng.traineddata` 存在/缺失两条分支。
 - 2026-03-27：P5 扩展 `OcrServiceTest`：新增“非零退出 + 空 stderr”回归，锁定默认错误文案 `Tesseract process failed.`。
+- 2026-03-27：P5 在 `LookupCoordinatorTest` 增加链路完整性断言，确保“OCR 失败默认提示”场景经过预处理与识别阶段后再降级返回。
 
 ## 4. 本轮完成后更新规则
 

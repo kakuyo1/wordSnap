@@ -48,6 +48,7 @@
 - 新增 `E2eSmokeTest`（`e2e` 标签）并打通夜间 smoke 触发链路，当前分层标签已覆盖 `unit/integration/ui/e2e`。
 - 新增 `ImagePreprocessorTest`（`unit`）并将 OCR 预处理二值化升级为“固定阈值 + 亮度范围自适应阈值”，提升低对比度文本保真度。
 - 新增 `OcrServiceTest`（`unit`），并为 `OcrService` 引入可注入 `ProcessRunner`，可稳定回归 OCR 启动失败/超时/非零退出默认错误文案/空输出，以及 `tessdataDir` 参数组装分支。
+- `LookupCoordinatorTest` 在“OCR 失败且错误为空”场景补充链路完整性断言：明确经过预处理与识别阶段后再回退默认提示文案。
 
 ## 未完成
 

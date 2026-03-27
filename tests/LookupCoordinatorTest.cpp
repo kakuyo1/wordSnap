@@ -121,6 +121,7 @@ void LookupCoordinatorTest::runReturnsOcrFailedWithDefaultHintWhenRecognizerErro
     QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | Ensure Tesseract is installed."));
     QCOMPARE(result.cardTimeoutMs, 2600);
     QCOMPARE(result.trayTimeoutMs, 2200);
+    QVERIFY(fixture.preprocessCalled);
     QVERIFY(fixture.recognizeCalled);
     QVERIFY(!fixture.normalizeCalled);
 }
