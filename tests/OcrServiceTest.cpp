@@ -31,6 +31,7 @@ private slots:
     void resolveFallsBackToPathEntries();
     void resolveUsesDiscoveredExecutableBeforeCommonLocations();
     void resolveUsesCommonInstallLocationWhenDiscoveredMissing();
+    void resolveAcceptsExecutablePathInTesseractPathEnv();
     void resolveFallsBackToCommandWhenNoCandidates();
 };
 
@@ -239,6 +240,21 @@ void OcrServiceTest::resolveUsesCommonInstallLocationWhenDiscoveredMissing() {
     snapshot.appDirPath = QStringLiteral("C:/app");
 
     QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/Program Files/Tesseract-OCR/tesseract.exe"));
+}
+
+void OcrServiceTest::resolveAcceptsExecutablePathInTesseractPathEnv() {
+    const QSet<QString> existingPaths{
+        QStringLiteral("C:/custom/bin/tesseract.exe")
+    };
+    const TesseractExecutableResolver resolver([&existingPaths](const QString& path) {
+        return existingPaths.contains(path);
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+    snapshot.tesseractPathEnv = QStringLiteral("C:/custom/bin/tesseract.exe");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/custom/bin/tesseract.exe"));
 }
 
 void OcrServiceTest::resolveFallsBackToCommandWhenNoCandidates() {

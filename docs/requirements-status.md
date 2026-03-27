@@ -50,6 +50,7 @@
 - 新增 `OcrServiceTest`（`unit`），并为 `OcrService` 引入可注入 `ProcessRunner`，可稳定回归 OCR 启动失败/超时/非零退出默认错误文案/空输出，以及 `tessdataDir` 参数组装分支。
 - 将 Tesseract 路径探测逻辑抽离为 `TesseractExecutableResolver`，并在 `OcrServiceTest` 增加应用目录优先、环境变量/PATH 回退与命令兜底分支回归。
 - `OcrServiceTest` 补齐可执行路径探测优先级回归：`QStandardPaths` 发现结果优先于常见安装目录，且未发现时可回退命中 `Program Files` 预设安装路径。
+- `OcrServiceTest` 补齐历史兼容回归：当 `TESSERACT_PATH` 直接配置为 `tesseract.exe` 文件路径（非目录）时仍可正确识别。
 - `LookupCoordinatorTest` 在“OCR 失败且错误为空”场景补充链路完整性断言：明确经过预处理与识别阶段后再回退默认提示文案。
 - 修复结果卡片颤动问题：回正动画在小位移场景直接落位，AI loading 点动画改为等宽等字号透明度切换，避免非边界场景的持续抖动。
 - `ResultCardWidgetTest` 新增 UI 回归：断言 AI loading 期间卡片几何保持稳定（远离屏幕边缘场景）。
