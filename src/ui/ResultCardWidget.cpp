@@ -24,6 +24,42 @@ QString normalizedStatusCode(QString statusCode) {
     return statusCode.isEmpty() ? QStringLiteral("FOUND") : statusCode;
 }
 
+QString buildAiSectionHtml(const QString& label, const QString& value) {
+    const QString trimmed = value.trimmed();
+    if (trimmed.isEmpty()) {
+        return {};
+    }
+
+    return QStringLiteral(
+               "<div style=\"margin-top:8px;\">"
+               "  <div style=\"font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; opacity:0.78;\">%1</div>"
+               "  <div style=\"margin-top:2px;\">%2</div>"
+               "</div>")
+        .arg(label.toHtmlEscaped(), trimmed.toHtmlEscaped());
+}
+
+QString buildAiCardHtml(const QString& subtitle, const QStringList& sectionHtml) {
+    QString html = QStringLiteral(
+        "<div>"
+        "  <div style=\"font-size:10px; font-weight:800; letter-spacing:1.1px; text-transform:uppercase;\">AI Word Notes</div>");
+
+    const QString subtitleTrimmed = subtitle.trimmed();
+    if (!subtitleTrimmed.isEmpty()) {
+        html += QStringLiteral(
+                    "<div style=\"margin-top:3px; font-size:11px; opacity:0.86;\">%1</div>")
+                    .arg(subtitleTrimmed.toHtmlEscaped());
+    }
+
+    for (const QString& section : sectionHtml) {
+        if (!section.isEmpty()) {
+            html += section;
+        }
+    }
+
+    html += QStringLiteral("</div>");
+    return html;
+}
+
 QString styleSheetForStyle(const ResultCardStyle style) {
     switch (style) {
     case ResultCardStyle::KraftPaper:
@@ -56,12 +92,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  color: #403428;"
             "}"
             "QLabel#aiLabel {"
-            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
+            "  font-family: 'Palatino Linotype', 'Georgia', 'Microsoft YaHei UI';"
             "  font-size: 12px;"
-            "  color: #5f4730;"
-            "  margin-top: 4px;"
-            "  padding-top: 6px;"
-            "  border-top: 1px solid rgba(181, 146, 108, 140);"
+            "  color: #4f3a26;"
+            "  margin-top: 6px;"
+            "  padding: 10px 12px 11px 12px;"
+            "  border-radius: 10px;"
+            "  background: rgba(252, 239, 218, 196);"
+            "  border: 1px solid rgba(191, 153, 111, 148);"
             "}");
     case ResultCardStyle::Glassmorphism:
         return QStringLiteral(
@@ -93,10 +131,12 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "QLabel#aiLabel {"
             "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
             "  font-size: 12px;"
-            "  color: rgba(229, 244, 255, 230);"
-            "  margin-top: 4px;"
-            "  padding-top: 6px;"
-            "  border-top: 1px solid rgba(190, 222, 246, 145);"
+            "  color: rgba(229, 244, 255, 236);"
+            "  margin-top: 6px;"
+            "  padding: 10px 12px 11px 12px;"
+            "  border-radius: 11px;"
+            "  background: rgba(29, 66, 104, 124);"
+            "  border: 1px solid rgba(193, 223, 247, 156);"
             "}");
     case ResultCardStyle::Terminal:
         return QStringLiteral(
@@ -128,10 +168,12 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "QLabel#aiLabel {"
             "  font-family: 'Consolas', 'Cascadia Mono', 'Courier New';"
             "  font-size: 12px;"
-            "  color: #7de694;"
-            "  margin-top: 4px;"
-            "  padding-top: 6px;"
-            "  border-top: 1px solid rgba(82, 172, 107, 170);"
+            "  color: #92f5aa;"
+            "  margin-top: 6px;"
+            "  padding: 10px 12px 11px 12px;"
+            "  border-radius: 6px;"
+            "  background: rgba(8, 29, 16, 210);"
+            "  border: 1px solid rgba(78, 193, 109, 188);"
             "}");
     case ResultCardStyle::Clay:
         return QStringLiteral(
@@ -161,12 +203,14 @@ QString styleSheetForStyle(const ResultCardStyle style) {
             "  color: #6d4b45;"
             "}"
             "QLabel#aiLabel {"
-            "  font-family: 'Segoe UI', 'Microsoft YaHei UI';"
+            "  font-family: 'Trebuchet MS', 'Segoe UI', 'Microsoft YaHei UI';"
             "  font-size: 12px;"
-            "  color: #8a5750;"
-            "  margin-top: 4px;"
-            "  padding-top: 6px;"
-            "  border-top: 1px solid rgba(217, 162, 151, 175);"
+            "  color: #7a4d47;"
+            "  margin-top: 6px;"
+            "  padding: 10px 12px 11px 12px;"
+            "  border-radius: 12px;"
+            "  background: rgba(255, 227, 220, 210);"
+            "  border: 1px solid rgba(218, 159, 148, 180);"
             "}");
     }
 
@@ -329,6 +373,7 @@ ResultCardWidget::ResultCardWidget(QWidget* parent)
     aiLabel_->setObjectName(QStringLiteral("aiLabel"));
     aiLabel_->setWordWrap(true);
     aiLabel_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    aiLabel_->setTextFormat(Qt::RichText);
     aiLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
     aiLabel_->hide();
 
@@ -547,35 +592,46 @@ void ResultCardWidget::showMessage(const QString& statusCode,
 }
 
 void ResultCardWidget::showAiLoading() {
-    showAiText(QStringLiteral("AI Assist\n..."), std::max(lastAutoHideMs_, 9000));
+    showAiText(
+        buildAiCardHtml(
+            QStringLiteral("Generating concise learning notes..."),
+            QStringList{}),
+        std::max(lastAutoHideMs_, 9000));
 }
 
 void ResultCardWidget::showAiContent(const AiAssistContent& content) {
-    QStringList lines;
-    lines << QStringLiteral("AI Assist");
+    QStringList sections;
 
     if (!content.definitionEn.trimmed().isEmpty()) {
-        lines << QStringLiteral("Definition: %1").arg(content.definitionEn.trimmed());
+        sections << buildAiSectionHtml(QStringLiteral("Definition"), content.definitionEn);
     }
     if (!content.roots.trimmed().isEmpty()) {
-        lines << QStringLiteral("Roots: %1").arg(content.roots.trimmed());
+        sections << buildAiSectionHtml(QStringLiteral("Roots"), content.roots);
     }
     if (!content.etymology.trimmed().isEmpty()) {
-        lines << QStringLiteral("Etymology: %1").arg(content.etymology.trimmed());
+        sections << buildAiSectionHtml(QStringLiteral("Etymology"), content.etymology);
     }
 
-    if (lines.size() == 1) {
+    if (sections.isEmpty()) {
         showAiError(QStringLiteral("AI output is empty."));
         return;
     }
 
-    showAiText(lines.join('\n'), 5200);
+    showAiText(
+        buildAiCardHtml(
+            QStringLiteral("Quick memory card generated from AI"),
+            sections),
+        5200);
 }
 
 void ResultCardWidget::showAiError(const QString& message) {
     const QString trimmed = message.trimmed();
     const QString detail = trimmed.isEmpty() ? QStringLiteral("AI assist is unavailable.") : trimmed;
-    showAiText(QStringLiteral("AI Assist\n%1").arg(detail), 5000);
+    showAiText(
+        buildAiCardHtml(
+            QStringLiteral("Fallback to dictionary result"),
+            QStringList{buildAiSectionHtml(QStringLiteral("Notice"), detail)}),
+        5000);
 }
 
 void ResultCardWidget::showAiText(const QString& text, const int autoHideMs) {
