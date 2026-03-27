@@ -20,6 +20,7 @@ class OcrServiceTest : public QObject {
 private slots:
     void recognizeFailsWhenProcessDoesNotStart();
     void recognizeFailsWhenProcessTimesOut();
+    void recognizeFailsWhenProcessExitCodeIsNonZero();
     void recognizeFailsWhenOcrReturnsNoText();
     void recognizeSucceedsWhenOcrReturnsText();
     void recognizeAddsTessdataArgumentWhenEngModelExists();
@@ -55,6 +56,24 @@ void OcrServiceTest::recognizeFailsWhenProcessTimesOut() {
 
     QVERIFY(!result.success);
     QCOMPARE(errorMessage, QStringLiteral("Tesseract timed out."));
+}
+
+void OcrServiceTest::recognizeFailsWhenProcessExitCodeIsNonZero() {
+    const OcrService service([](const QString&, const QStringList&, int, int) {
+        OcrService::ProcessRunResult runResult;
+        runResult.started = true;
+        runResult.finished = true;
+        runResult.normalExit = true;
+        runResult.exitCode = 1;
+        runResult.standardError.clear();
+        return runResult;
+    });
+
+    QString errorMessage;
+    const OcrWordResult result = service.recognizeSingleWord(makeTinyImage(), QString(), &errorMessage);
+
+    QVERIFY(!result.success);
+    QCOMPARE(errorMessage, QStringLiteral("Tesseract process failed."));
 }
 
 void OcrServiceTest::recognizeFailsWhenOcrReturnsNoText() {

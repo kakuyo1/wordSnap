@@ -98,6 +98,7 @@
 - [x] 补齐 `OcrService` 可测边界（`unit`）：
   - 进程启动失败；
   - 进程超时；
+  - 进程非零退出且无标准错误时回退默认错误文案；
   - 正常退出但输出为空；
   - 正常返回文本并去空白。
 - [x] 为 `OcrService` 引入可注入进程执行器（`ProcessRunner`），将外部进程调用与结果判定解耦，便于 TDD 下稳定模拟失败路径。
@@ -128,6 +129,7 @@
 - 2026-03-27：启动 P5：新增 `ImagePreprocessorTest` 并引入自适应二值化阈值，提升低对比度 OCR 预处理鲁棒性。
 - 2026-03-27：P5 继续推进：新增 `OcrServiceTest`，并将 `OcrService` 进程调用抽象为可注入 `ProcessRunner`，完成 OCR 启动失败/超时/空输出/成功输出边界回归。
 - 2026-03-27：P5 扩展 `OcrServiceTest`：补齐 `tessdataDir` 参数组装断言，覆盖 `eng.traineddata` 存在/缺失两条分支。
+- 2026-03-27：P5 扩展 `OcrServiceTest`：新增“非零退出 + 空 stderr”回归，锁定默认错误文案 `Tesseract process failed.`。
 
 ## 4. 本轮完成后更新规则
 
