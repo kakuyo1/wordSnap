@@ -29,6 +29,8 @@ private slots:
     void recognizeSkipsTessdataArgumentWhenEngModelMissing();
     void resolvePrefersAppLocalAndEnvVariables();
     void resolveFallsBackToPathEntries();
+    void resolveUsesDiscoveredExecutableBeforeCommonLocations();
+    void resolveUsesCommonInstallLocationWhenDiscoveredMissing();
     void resolveFallsBackToCommandWhenNoCandidates();
 };
 
@@ -208,6 +210,35 @@ void OcrServiceTest::resolveFallsBackToPathEntries() {
     snapshot.systemPath = QStringLiteral(" ; C:/path-a ; C:/path-b ; ");
 
     QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/path-b/tesseract.exe"));
+}
+
+void OcrServiceTest::resolveUsesDiscoveredExecutableBeforeCommonLocations() {
+    const QSet<QString> existingPaths{
+        QStringLiteral("C:/Program Files/Tesseract-OCR/tesseract.exe")
+    };
+    const TesseractExecutableResolver resolver([&existingPaths](const QString& path) {
+        return existingPaths.contains(path);
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+    snapshot.discoveredTesseract = QStringLiteral("C:/portable/tesseract.exe");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/portable/tesseract.exe"));
+}
+
+void OcrServiceTest::resolveUsesCommonInstallLocationWhenDiscoveredMissing() {
+    const QSet<QString> existingPaths{
+        QStringLiteral("C:/Program Files/Tesseract-OCR/tesseract.exe")
+    };
+    const TesseractExecutableResolver resolver([&existingPaths](const QString& path) {
+        return existingPaths.contains(path);
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/Program Files/Tesseract-OCR/tesseract.exe"));
 }
 
 void OcrServiceTest::resolveFallsBackToCommandWhenNoCandidates() {

@@ -110,7 +110,10 @@
 - [x] 完成 `resolveTesseractExecutable` 可测抽离：
   - 新增 `TesseractExecutableResolver`，将运行时快照采集与路径决策逻辑解耦；
   - 补齐环境变量/PATH 分支回归（应用目录优先、PATH 回退、最终命令兜底）。
-- [ ] 下一步：补齐 `QStandardPaths::findExecutable` 双分支（`tesseract` / `tesseract.exe`）与常见安装目录命中路径的回归断言。
+- [x] 补齐 `QStandardPaths::findExecutable` / 常见安装目录命中分支回归：
+  - `discoveredTesseract` 命中时优先于常见安装目录；
+  - 未命中发现路径时可回退到 `Program Files` 常见安装目录。
+- [ ] 下一步：补齐 `TESSERACT_PATH` 指向“可执行文件路径（非目录）”场景的回归断言，锁定历史兼容行为。
 
 ## 3. 当前迭代执行记录
 
@@ -138,6 +141,7 @@
 - 2026-03-27：P5 在 `LookupCoordinatorTest` 增加链路完整性断言，确保“OCR 失败默认提示”场景经过预处理与识别阶段后再降级返回。
 - 2026-03-27：P3 回归修复：优化 `ResultCardWidget` 回正动画与 AI loading 动效，消除非边界场景下卡片颤动；新增 UI 用例断言 loading 期间几何稳定。
 - 2026-03-27：P5 将 Tesseract 可执行探测抽离为 `TesseractExecutableResolver`，在 `OcrServiceTest` 新增环境变量/PATH/兜底命令回归，降低路径探测改动回归风险。
+- 2026-03-27：P5 继续扩展 `OcrServiceTest`：补齐 discovered 可执行路径优先级与常见安装目录命中分支，完善路径探测决策回归矩阵。
 
 ## 4. 本轮完成后更新规则
 
