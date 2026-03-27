@@ -65,6 +65,7 @@ add_wordsnap_test(ImagePreprocessorTest unit
 add_wordsnap_test(OcrServiceTest unit
     OcrServiceTest.cpp
     ../src/services/OcrService.cpp
+    ../src/services/TesseractExecutableResolver.cpp
 )
 
 add_wordsnap_test(ResultCardWidgetTest ui

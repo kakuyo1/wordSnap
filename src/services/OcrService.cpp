@@ -1,11 +1,10 @@
 #include "services/OcrService.h"
 
-#include <QCoreApplication>
+#include "services/TesseractExecutableResolver.h"
+
 #include <QDir>
 #include <QFileInfo>
-#include <QProcessEnvironment>
 #include <QProcess>
-#include <QStandardPaths>
 #include <QTemporaryFile>
 
 #include <utility>
@@ -40,76 +39,6 @@ OcrService::ProcessRunResult runWithQProcess(const QString& executable,
     return runResult;
 }
 
-QString executableFromPathEntry(const QString& rawEntry) {
-    const QString entry = rawEntry.trimmed();
-    if (entry.isEmpty()) {
-        return {};
-    }
-
-    QFileInfo info(entry);
-    if (info.exists() && info.isFile() && info.fileName().compare(QStringLiteral("tesseract.exe"), Qt::CaseInsensitive) == 0) {
-        return info.absoluteFilePath();
-    }
-
-    if (info.exists() && info.isDir()) {
-        const QString candidate = QDir(info.absoluteFilePath()).filePath(QStringLiteral("tesseract.exe"));
-        if (QFileInfo::exists(candidate)) {
-            return candidate;
-        }
-    }
-
-    return {};
-}
-
-QString resolveTesseractExecutable() {
-    const QString appLocal = QCoreApplication::applicationDirPath() + QStringLiteral("/tesseract.exe");
-    if (QFileInfo::exists(appLocal)) {
-        return appLocal;
-    }
-
-    const QString envExe = executableFromPathEntry(qEnvironmentVariable("TESSERACT_EXE"));
-    if (!envExe.isEmpty()) {
-        return envExe;
-    }
-
-    const QString envPath = executableFromPathEntry(qEnvironmentVariable("TESSERACT_PATH"));
-    if (!envPath.isEmpty()) {
-        return envPath;
-    }
-
-    const QProcessEnvironment processEnvironment = QProcessEnvironment::systemEnvironment();
-    if (processEnvironment.contains(QStringLiteral("PATH"))) {
-        const QStringList pathEntries = processEnvironment.value(QStringLiteral("PATH")).split(';', Qt::SkipEmptyParts);
-        for (const QString& pathEntry : pathEntries) {
-            const QString candidate = executableFromPathEntry(pathEntry);
-            if (!candidate.isEmpty()) {
-                return candidate;
-            }
-        }
-    }
-
-    const QString discoveredExe = QStandardPaths::findExecutable(QStringLiteral("tesseract"));
-    if (!discoveredExe.isEmpty()) {
-        return discoveredExe;
-    }
-
-    const QString discoveredExeWithSuffix = QStandardPaths::findExecutable(QStringLiteral("tesseract.exe"));
-    if (!discoveredExeWithSuffix.isEmpty()) {
-        return discoveredExeWithSuffix;
-    }
-
-    const QStringList commonInstallLocations{
-        QStringLiteral("C:/Program Files/Tesseract-OCR/tesseract.exe"),
-        QStringLiteral("C:/Program Files (x86)/Tesseract-OCR/tesseract.exe")
-    };
-    for (const QString& location : commonInstallLocations) {
-        if (QFileInfo::exists(location)) {
-            return location;
-        }
-    }
-
-    return QStringLiteral("tesseract");
-}
 } // namespace
 
 OcrService::OcrService()
@@ -166,7 +95,8 @@ OcrWordResult OcrService::recognizeSingleWord(const QImage& image,
         }
     }
 
-    const QString executable = resolveTesseractExecutable();
+    const TesseractExecutableResolver executableResolver;
+    const QString executable = executableResolver.resolve(TesseractExecutableResolver::captureRuntime());
     const ProcessRunResult runResult = processRunner_(executable, arguments, 3000, 12000);
     if (!runResult.started) {
         if (errorMessage != nullptr) {

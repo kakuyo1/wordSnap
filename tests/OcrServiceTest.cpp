@@ -2,9 +2,11 @@
 
 #include <QDir>
 #include <QFile>
+#include <QSet>
 #include <QTemporaryDir>
 
 #include "services/OcrService.h"
+#include "services/TesseractExecutableResolver.h"
 
 namespace {
 QImage makeTinyImage() {
@@ -25,6 +27,9 @@ private slots:
     void recognizeSucceedsWhenOcrReturnsText();
     void recognizeAddsTessdataArgumentWhenEngModelExists();
     void recognizeSkipsTessdataArgumentWhenEngModelMissing();
+    void resolvePrefersAppLocalAndEnvVariables();
+    void resolveFallsBackToPathEntries();
+    void resolveFallsBackToCommandWhenNoCandidates();
 };
 
 void OcrServiceTest::recognizeFailsWhenProcessDoesNotStart() {
@@ -169,6 +174,52 @@ void OcrServiceTest::recognizeSkipsTessdataArgumentWhenEngModelMissing() {
     QVERIFY(result.success);
     QVERIFY(errorMessage.isEmpty());
     QCOMPARE(capturedArguments.indexOf(QStringLiteral("--tessdata-dir")), -1);
+}
+
+void OcrServiceTest::resolvePrefersAppLocalAndEnvVariables() {
+    const QSet<QString> existingPaths{
+        QStringLiteral("C:/app/tesseract.exe"),
+        QStringLiteral("C:/env/tesseract.exe"),
+        QStringLiteral("C:/env-path/tesseract.exe")
+    };
+    const TesseractExecutableResolver resolver([&existingPaths](const QString& path) {
+        return existingPaths.contains(path);
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+    snapshot.tesseractExeEnv = QStringLiteral("C:/env/tesseract.exe");
+    snapshot.tesseractPathEnv = QStringLiteral("C:/env-path");
+    snapshot.systemPath = QStringLiteral("C:/path-a;C:/path-b");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/app/tesseract.exe"));
+}
+
+void OcrServiceTest::resolveFallsBackToPathEntries() {
+    const QSet<QString> existingPaths{
+        QStringLiteral("C:/path-b/tesseract.exe")
+    };
+    const TesseractExecutableResolver resolver([&existingPaths](const QString& path) {
+        return existingPaths.contains(path);
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+    snapshot.systemPath = QStringLiteral(" ; C:/path-a ; C:/path-b ; ");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("C:/path-b/tesseract.exe"));
+}
+
+void OcrServiceTest::resolveFallsBackToCommandWhenNoCandidates() {
+    const TesseractExecutableResolver resolver([](const QString&) {
+        return false;
+    });
+
+    TesseractExecutableResolver::RuntimeSnapshot snapshot;
+    snapshot.appDirPath = QStringLiteral("C:/app");
+    snapshot.systemPath = QStringLiteral("C:/path-a;C:/path-b");
+
+    QCOMPARE(resolver.resolve(snapshot), QStringLiteral("tesseract"));
 }
 
 QTEST_APPLESS_MAIN(OcrServiceTest)

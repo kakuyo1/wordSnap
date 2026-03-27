@@ -35,6 +35,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/services/ImagePreprocessor.cpp
     src/services/OcrService.h
     src/services/OcrService.cpp
+    src/services/TesseractExecutableResolver.h
+    src/services/TesseractExecutableResolver.cpp
     src/services/QueryHistoryService.h
     src/services/QueryHistoryService.cpp
     src/services/SettingsService.h

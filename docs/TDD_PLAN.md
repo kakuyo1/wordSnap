@@ -107,7 +107,10 @@
   - `eng.traineddata` 缺失时不应附加该参数。
 - [x] 在编排层补齐 OCR 失败默认降级文案组合链路断言：
   - 识别失败且错误为空时，除默认文案外，明确断言链路已执行到 `preprocess` 与 `recognize`（非前置阶段短路）。
-- [ ] 下一步：评估 `resolveTesseractExecutable` 探测路径的可测抽离，继续补齐环境变量/PATH 分支回归。
+- [x] 完成 `resolveTesseractExecutable` 可测抽离：
+  - 新增 `TesseractExecutableResolver`，将运行时快照采集与路径决策逻辑解耦；
+  - 补齐环境变量/PATH 分支回归（应用目录优先、PATH 回退、最终命令兜底）。
+- [ ] 下一步：补齐 `QStandardPaths::findExecutable` 双分支（`tesseract` / `tesseract.exe`）与常见安装目录命中路径的回归断言。
 
 ## 3. 当前迭代执行记录
 
@@ -134,6 +137,7 @@
 - 2026-03-27：P5 扩展 `OcrServiceTest`：新增“非零退出 + 空 stderr”回归，锁定默认错误文案 `Tesseract process failed.`。
 - 2026-03-27：P5 在 `LookupCoordinatorTest` 增加链路完整性断言，确保“OCR 失败默认提示”场景经过预处理与识别阶段后再降级返回。
 - 2026-03-27：P3 回归修复：优化 `ResultCardWidget` 回正动画与 AI loading 动效，消除非边界场景下卡片颤动；新增 UI 用例断言 loading 期间几何稳定。
+- 2026-03-27：P5 将 Tesseract 可执行探测抽离为 `TesseractExecutableResolver`，在 `OcrServiceTest` 新增环境变量/PATH/兜底命令回归，降低路径探测改动回归风险。
 
 ## 4. 本轮完成后更新规则
 
