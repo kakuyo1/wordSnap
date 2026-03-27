@@ -102,6 +102,7 @@ ctest --test-dir build -C Debug -L integration --output-on-failure
 - `TESTING_GUIDELINES.md`：项目测试强约束（高价值、最小化、分层策略）。
 - `docs/TDD_CORE.md`：TDD 核心原则。
 - `docs/TDD_PLAN.md`：TDD 滚动执行计划与阶段进度。
+- `docs/FUTURE.md`：候选事项池（当前不阻断需求，按反馈触发）。
 - `AGENTS.md`：面向编码 Agent 的协作规范。
 
 ## 8. 目录结构
@@ -140,7 +141,7 @@ wordSnapV1/
 - 按高价值测试策略持续补齐核心逻辑回归（遵循 `TESTING_GUIDELINES.md`）。
 - 完善 ResultCard 风格和状态规范，增加查询历史功能。
 - 接入 DeepSeek（异步加载、失败降级、结构化输出）。
-- 提升 OCR 在游戏/网页场景下的鲁棒性。
+- OCR 鲁棒性本轮按当前需求已收口，后续增强项见 `docs/FUTURE.md`。
 - 打通 `windeployqt + Inno Setup` 发布流程。
 
 详细计划请查看：`docs/PLAN.md`。
