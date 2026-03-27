@@ -53,17 +53,19 @@ void paintKraftPaper(QPainter* painter, const QRectF& cardRect) {
 void paintWhitePaper(QPainter* painter, const QRectF& cardRect) {
     constexpr qreal kRadius = 13.5;
     const QRectF paperRect = cardRect.adjusted(2.0, 2.0, -2.0, -2.0);
-    const qreal foldWidth = std::min(42.0, paperRect.width() * 0.19);
-    const qreal foldHeight = std::min(34.0, paperRect.height() * 0.21);
+    const qreal foldWidth = std::min(36.0, paperRect.width() * 0.17);
+    const qreal foldHeight = std::min(30.0, paperRect.height() * 0.18);
 
-    const QPointF foldTop(paperRect.right() - foldWidth, paperRect.top() + 1.0);
-    const QPointF foldCorner(paperRect.right() - 1.0, paperRect.top() + 1.0);
-    const QPointF foldSide(paperRect.right() - 1.0, paperRect.top() + foldHeight);
+    const QPointF foldTop(paperRect.right() - foldWidth, paperRect.top() + 1.2);
+    const QPointF foldSide(paperRect.right() - 1.2, paperRect.top() + foldHeight);
+    const QPointF foldPeak(paperRect.right() - 2.0, paperRect.top() + 2.0);
+    const QPointF ridgeCtrl1(paperRect.right() - foldWidth * 0.34, paperRect.top() - 0.7);
+    const QPointF ridgeCtrl2(paperRect.right() + 0.8, paperRect.top() + foldHeight * 0.36);
 
     QPainterPath foldCutPath;
     foldCutPath.moveTo(foldTop);
-    foldCutPath.lineTo(foldCorner);
-    foldCutPath.lineTo(foldSide);
+    foldCutPath.cubicTo(ridgeCtrl1, ridgeCtrl2, foldSide);
+    foldCutPath.lineTo(foldPeak);
     foldCutPath.closeSubpath();
 
     QPainterPath paperPath;
@@ -125,34 +127,63 @@ void paintWhitePaper(QPainter* painter, const QRectF& cardRect) {
 
     painter->restore();
 
+    const QPointF foldInner(
+        paperRect.right() - foldWidth * 0.56,
+        paperRect.top() + foldHeight * 0.62);
+
     QPainterPath foldUnderPath;
-    foldUnderPath.moveTo(foldTop + QPointF(0.5, 0.8));
-    foldUnderPath.lineTo(foldSide + QPointF(-0.6, 0.0));
-    foldUnderPath.lineTo(QPointF(paperRect.right() - foldWidth * 0.54, paperRect.top() + foldHeight * 0.58));
+    foldUnderPath.moveTo(foldTop + QPointF(0.6, 0.7));
+    foldUnderPath.cubicTo(
+        QPointF(paperRect.right() - foldWidth * 0.27, paperRect.top() + 0.2),
+        QPointF(paperRect.right() - 0.6, paperRect.top() + foldHeight * 0.43),
+        foldSide + QPointF(-0.6, 0.0));
+    foldUnderPath.quadTo(
+        QPointF(paperRect.right() - foldWidth * 0.36, paperRect.top() + foldHeight * 0.64),
+        foldInner);
     foldUnderPath.closeSubpath();
 
     QLinearGradient foldUnderGradient(foldTop, foldSide);
-    foldUnderGradient.setColorAt(0.0, QColor(173, 180, 188, 118));
-    foldUnderGradient.setColorAt(1.0, QColor(206, 211, 219, 36));
+    foldUnderGradient.setColorAt(0.0, QColor(183, 190, 198, 92));
+    foldUnderGradient.setColorAt(1.0, QColor(215, 220, 227, 28));
     painter->fillPath(foldUnderPath, foldUnderGradient);
 
     QPainterPath foldFlapPath;
     foldFlapPath.moveTo(foldTop);
-    foldFlapPath.lineTo(foldCorner);
-    foldFlapPath.lineTo(foldSide);
+    foldFlapPath.cubicTo(ridgeCtrl1, ridgeCtrl2, foldSide);
+    foldFlapPath.quadTo(
+        QPointF(paperRect.right() - foldWidth * 0.42, paperRect.top() + foldHeight * 0.64),
+        foldInner);
+    foldFlapPath.quadTo(
+        QPointF(paperRect.right() - foldWidth * 0.60, paperRect.top() + foldHeight * 0.30),
+        foldTop);
     foldFlapPath.closeSubpath();
 
     QLinearGradient foldGradient(foldTop, foldSide);
-    foldGradient.setColorAt(0.0, QColor(255, 255, 255, 249));
-    foldGradient.setColorAt(0.6, QColor(246, 248, 250, 250));
-    foldGradient.setColorAt(1.0, QColor(226, 231, 237, 245));
+    foldGradient.setColorAt(0.0, QColor(255, 255, 255, 247));
+    foldGradient.setColorAt(0.64, QColor(248, 250, 252, 246));
+    foldGradient.setColorAt(1.0, QColor(231, 236, 242, 238));
 
-    painter->setPen(QPen(QColor(199, 205, 213, 210), 1.0));
+    painter->setPen(QPen(QColor(203, 209, 216, 196), 0.95));
     painter->setBrush(foldGradient);
     painter->drawPath(foldFlapPath);
 
-    painter->setPen(QPen(QColor(176, 183, 191, 150), 1.0));
-    painter->drawLine(foldTop, foldSide);
+    QPainterPath ridgePath;
+    ridgePath.moveTo(foldTop + QPointF(0.0, 0.25));
+    ridgePath.cubicTo(
+        QPointF(paperRect.right() - foldWidth * 0.32, paperRect.top() - 0.2),
+        QPointF(paperRect.right() - 0.8, paperRect.top() + foldHeight * 0.36),
+        foldSide + QPointF(-0.2, -0.2));
+    painter->setPen(QPen(QColor(179, 185, 193, 132), 0.95));
+    painter->drawPath(ridgePath);
+
+    QPainterPath ridgeHighlight;
+    ridgeHighlight.moveTo(foldTop + QPointF(0.3, 0.65));
+    ridgeHighlight.cubicTo(
+        QPointF(paperRect.right() - foldWidth * 0.38, paperRect.top() + 0.5),
+        QPointF(paperRect.right() - 1.4, paperRect.top() + foldHeight * 0.32),
+        foldSide + QPointF(-0.9, -0.1));
+    painter->setPen(QPen(QColor(255, 255, 255, 92), 0.8));
+    painter->drawPath(ridgeHighlight);
 
     painter->setPen(QPen(QColor(255, 255, 255, 106), 1.0));
     painter->drawLine(
