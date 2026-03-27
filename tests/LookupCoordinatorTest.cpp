@@ -12,6 +12,7 @@ private slots:
     void runReturnsOcrFailedWhenCaptureIsEmpty();
     void runReturnsOcrFailedWhenRecognizerFails();
     void runReturnsOcrFailedWhenNormalizedCandidateIsEmpty();
+    void runReturnsOcrFailedWhenNormalizedCandidateContainsWhitespace();
     void runTrimsNormalizedCandidateBeforeDictionaryLookup();
     void runTrimsDictionaryHeadwordForDisplay();
     void runReturnsDictUnavailableWhenBackendIsNotReady();
@@ -148,6 +149,52 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateIsEmpty() 
         },
         [](const QString&) {
             return QString();
+        },
+        [&]() {
+            dictionaryReadyCalled = true;
+            return true;
+        },
+        [](const QString&) {
+            DictionaryEntry entry;
+            entry.found = true;
+            return entry;
+        },
+    });
+
+    const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
+    QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.queryWord, QString());
+    QCOMPARE(result.tooltipText,
+             QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
+    QCOMPARE(result.cardTitle, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.cardBody, QStringLiteral("OCR text is not a valid word candidate."));
+    QCOMPARE(result.trayMessage,
+             QStringLiteral("OCR_FAILED | OCR text is not a valid word candidate."));
+    QCOMPARE(result.cardTimeoutMs, 2200);
+    QCOMPARE(result.trayTimeoutMs, 1700);
+    QVERIFY(!dictionaryReadyCalled);
+}
+
+void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateContainsWhitespace() {
+    bool dictionaryReadyCalled = false;
+
+    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
+        [](const QRect&) {
+            return QImage(4, 4, QImage::Format_ARGB32);
+        },
+        [](const QImage& image) {
+            return image;
+        },
+        [](const QImage&, const QString&, QString*) {
+            OcrWordResult result;
+            result.success = true;
+            result.rawText = QStringLiteral("run fast");
+            return result;
+        },
+        [](const QString&) {
+            return QStringLiteral("run fast");
         },
         [&]() {
             dictionaryReadyCalled = true;

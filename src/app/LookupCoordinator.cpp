@@ -60,6 +60,15 @@ QString clampTrayMessage(QString message, int maxChars = 180) {
     return message.left(maxChars - 3) + QStringLiteral("...");
 }
 
+bool containsWhitespace(const QString& text) {
+    for (const QChar ch : text) {
+        if (ch.isSpace()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 LookupCoordinator::Result makeStatusResult(const LookupCoordinator::Status status,
                                            QString queryWord,
                                            QString detail,
@@ -128,7 +137,7 @@ LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
     }
 
     ocrResult.normalizedText = dependencies_.normalizeCandidate(ocrResult.rawText).trimmed();
-    if (ocrResult.normalizedText.isEmpty()) {
+    if (ocrResult.normalizedText.isEmpty() || containsWhitespace(ocrResult.normalizedText)) {
         return makeStatusResult(
             Status::OcrFailed,
             QString(),
