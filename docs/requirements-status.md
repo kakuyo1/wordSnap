@@ -14,8 +14,8 @@
 - 实现 OCR 结果归一化（提取英文单词候选）。
 - 实现 StarDict 最小可用查询（`.ifo + .idx + .dict`）。
 - 实现结果展示闭环（鼠标附近卡片 + tooltip + tray 消息）。
-- 实现启动配置读取（热键、显示模式、词典目录、tessdata 目录）。
-- 实现 `SettingsDialog`（热键、显示模式、词典目录、tessdata 目录可编辑并落盘）。
+- 实现启动配置读取（热键、词典目录、tessdata 目录）。
+- 实现 `SettingsDialog`（热键、词典目录、tessdata 目录可编辑并落盘）。
 - 增强 Tesseract 路径探测与错误提示（应用目录、环境变量、PATH、常见安装目录）。
 - 结果状态统一为 `FOUND` / `OCR_FAILED` / `UNKNOWN` / `DICT_UNAVAILABLE`，卡片与托盘文案一致。
 - 结果卡片支持风格切换（Kraft paper / Glassmorphism / Terminal / Clay），并支持运行时应用。

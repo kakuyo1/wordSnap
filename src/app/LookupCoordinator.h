@@ -42,8 +42,7 @@ public:
     explicit LookupCoordinator(Dependencies dependencies);
 
     Result run(const QRect& globalRect,
-               const QString& tessdataDir,
-               DisplayMode displayMode) const;
+               const QString& tessdataDir) const;
 
 private:
     Dependencies dependencies_;

@@ -30,7 +30,6 @@ private slots:
 
 private:
     QLineEdit* hotkeyEdit_{nullptr};
-    QComboBox* displayModeCombo_{nullptr};
     QLineEdit* starDictDirEdit_{nullptr};
     QLineEdit* tessdataDirEdit_{nullptr};
     QComboBox* resultCardStyleCombo_{nullptr};

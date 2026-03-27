@@ -46,7 +46,7 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenCaptureIsEmpty() {
     });
 
     const LookupCoordinator::Result result =
-        coordinator.run(QRect(10, 20, 30, 40), QString(), DisplayMode::Bilingual);
+        coordinator.run(QRect(10, 20, 30, 40), QString());
 
     QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
     QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
@@ -94,7 +94,7 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {
     });
 
     const LookupCoordinator::Result result =
-        coordinator.run(QRect(0, 0, 20, 20), QString(), DisplayMode::Bilingual);
+        coordinator.run(QRect(0, 0, 20, 20), QString());
 
     QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
     QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
@@ -137,7 +137,7 @@ void LookupCoordinatorTest::runReturnsDictUnavailableWhenBackendIsNotReady() {
     });
 
     const LookupCoordinator::Result result =
-        coordinator.run(QRect(0, 0, 20, 20), QString(), DisplayMode::Bilingual);
+        coordinator.run(QRect(0, 0, 20, 20), QString());
 
     QCOMPARE(result.status, LookupCoordinator::Status::DictUnavailable);
     QCOMPARE(result.statusCode, QStringLiteral("DICT_UNAVAILABLE"));
@@ -177,7 +177,7 @@ void LookupCoordinatorTest::runReturnsUnknownWhenDictionaryMissesWord() {
     });
 
     const LookupCoordinator::Result result =
-        coordinator.run(QRect(0, 0, 20, 20), QString(), DisplayMode::Bilingual);
+        coordinator.run(QRect(0, 0, 20, 20), QString());
 
     QCOMPARE(result.status, LookupCoordinator::Status::Unknown);
     QCOMPARE(result.statusCode, QStringLiteral("UNKNOWN"));
@@ -220,7 +220,7 @@ void LookupCoordinatorTest::runBuildsFoundResultAndExtractsInlinePhonetic() {
     });
 
     const LookupCoordinator::Result result =
-        coordinator.run(QRect(0, 0, 20, 20), QString(), DisplayMode::En);
+        coordinator.run(QRect(0, 0, 20, 20), QString());
 
     QCOMPARE(result.status, LookupCoordinator::Status::Found);
     QCOMPARE(result.statusCode, QStringLiteral("FOUND"));

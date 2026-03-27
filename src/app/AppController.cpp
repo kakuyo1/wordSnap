@@ -182,7 +182,7 @@ void AppController::onRegionSelected(const QRect& globalRect) {
     const int lookupToken = activeLookupToken_;
 
     const LookupCoordinator::Result result =
-        lookupCoordinator_->run(globalRect, settings_.tessdataDir, settings_.displayMode);
+        lookupCoordinator_->run(globalRect, settings_.tessdataDir);
 
     const QPoint anchorPos = QCursor::pos();
     QToolTip::showText(anchorPos, result.tooltipText);
@@ -379,7 +379,6 @@ void AppController::onSettingsRequested() {
         }
     }
 
-    updatedSettings.displayMode = requestedSettings.displayMode;
     updatedSettings.tessdataDir = requestedSettings.tessdataDir.trimmed();
     updatedSettings.resultCardOpacityPercent = requestedSettings.resultCardOpacityPercent;
     updatedSettings.resultCardDurationMs = requestedSettings.resultCardDurationMs;

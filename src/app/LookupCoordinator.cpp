@@ -37,31 +37,7 @@ QString firstNonEmpty(const QStringList& lines) {
     return {};
 }
 
-QString pickDefinitionPreview(const DictionaryEntry& entry, const DisplayMode mode) {
-    if (mode == DisplayMode::Zh) {
-        QString preview = firstNonEmpty(entry.definitionsZh);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        preview = firstNonEmpty(entry.definitionsEn);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        return entry.rawHtml.simplified();
-    }
-
-    if (mode == DisplayMode::En) {
-        QString preview = firstNonEmpty(entry.definitionsEn);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        preview = firstNonEmpty(entry.definitionsZh);
-        if (!preview.isEmpty()) {
-            return preview;
-        }
-        return entry.rawHtml.simplified();
-    }
-
+QString pickDefinitionPreview(const DictionaryEntry& entry) {
     const QString zh = firstNonEmpty(entry.definitionsZh);
     const QString en = firstNonEmpty(entry.definitionsEn);
     if (!zh.isEmpty() && !en.isEmpty()) {
@@ -115,8 +91,7 @@ LookupCoordinator::LookupCoordinator(Dependencies dependencies)
 }
 
 LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
-                                                 const QString& tessdataDir,
-                                                 const DisplayMode displayMode) const {
+                                                 const QString& tessdataDir) const {
     if (!dependencies_.capture || !dependencies_.preprocess || !dependencies_.recognizeSingleWord
         || !dependencies_.normalizeCandidate || !dependencies_.isDictionaryReady || !dependencies_.lookup) {
         return makeStatusResult(
@@ -182,7 +157,7 @@ LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
     }
 
     const QString headword = entry.headword.isEmpty() ? ocrResult.normalizedText : entry.headword;
-    QString preview = pickDefinitionPreview(entry, displayMode);
+    QString preview = pickDefinitionPreview(entry);
     QString phonetic = PhoneticExtractor::pickPrimaryPhonetic(entry);
 
     QString extractedPhonetic;

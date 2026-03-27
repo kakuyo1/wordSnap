@@ -4,13 +4,6 @@
 #include <QString>
 #include <QStringList>
 
-// Definition display mode for dictionary entries.
-enum class DisplayMode {
-    Zh,
-    En,
-    Bilingual
-};
-
 // Result card visual style.
 enum class ResultCardStyle {
     KraftPaper,
@@ -102,7 +95,6 @@ struct AiAssistContent {
 // Application-level persistent settings.
 struct AppSettings {
     QString hotkey{QStringLiteral("Shift+Alt+S")};
-    DisplayMode displayMode{DisplayMode::Bilingual};
     QString starDictDir;
     QString tessdataDir;
     int resultCardOpacityPercent{92};
@@ -115,32 +107,6 @@ struct AppSettings {
     QString aiModel{QStringLiteral("deepseek-chat")};
     int aiTimeoutMs{kDefaultAiTimeoutMs};
 };
-
-// Converts display mode enum to stable settings string.
-inline QString displayModeToString(const DisplayMode mode) {
-    switch (mode) {
-    case DisplayMode::Zh:
-        return QStringLiteral("zh");
-    case DisplayMode::En:
-        return QStringLiteral("en");
-    case DisplayMode::Bilingual:
-        return QStringLiteral("bilingual");
-    }
-
-    return QStringLiteral("bilingual");
-}
-
-// Parses display mode from settings string.
-inline DisplayMode displayModeFromString(QString value) {
-    value = value.trimmed().toLower();
-    if (value == QStringLiteral("zh")) {
-        return DisplayMode::Zh;
-    }
-    if (value == QStringLiteral("en")) {
-        return DisplayMode::En;
-    }
-    return DisplayMode::Bilingual;
-}
 
 // Converts result card style enum to stable settings string.
 inline QString resultCardStyleToString(const ResultCardStyle style) {

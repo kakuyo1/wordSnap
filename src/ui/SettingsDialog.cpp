@@ -30,7 +30,6 @@ QString startDirectoryFromText(const QString& text) {
 SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* parent)
     : QDialog(parent),
       hotkeyEdit_(new QLineEdit(this)),
-      displayModeCombo_(new QComboBox(this)),
       starDictDirEdit_(new QLineEdit(this)),
       tessdataDirEdit_(new QLineEdit(this)),
       resultCardStyleCombo_(new QComboBox(this)),
@@ -50,14 +49,6 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     hotkeyEdit_->setText(initialSettings.hotkey);
     hotkeyEdit_->setPlaceholderText(QStringLiteral("Shift+Alt+S"));
     hotkeyEdit_->setClearButtonEnabled(true);
-
-    displayModeCombo_->addItem(QStringLiteral("Bilingual (EN + ZH)"), QStringLiteral("bilingual"));
-    displayModeCombo_->addItem(QStringLiteral("English first"), QStringLiteral("en"));
-    displayModeCombo_->addItem(QStringLiteral("Chinese first"), QStringLiteral("zh"));
-    const int modeIndex = displayModeCombo_->findData(displayModeToString(initialSettings.displayMode));
-    if (modeIndex >= 0) {
-        displayModeCombo_->setCurrentIndex(modeIndex);
-    }
 
     resultCardStyleCombo_->addItem(QStringLiteral("Kraft paper"), QStringLiteral("kraft_paper"));
     resultCardStyleCombo_->addItem(QStringLiteral("Glassmorphism"), QStringLiteral("glassmorphism"));
@@ -133,7 +124,6 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     opacityLayout->addWidget(resultCardOpacityValueLabel_);
 
     formLayout->addRow(QStringLiteral("Hotkey"), hotkeyEdit_);
-    formLayout->addRow(QStringLiteral("Display mode"), displayModeCombo_);
     formLayout->addRow(QStringLiteral("Result card style"), resultCardStyleCombo_);
     formLayout->addRow(QStringLiteral("StarDict folder"), starDictDirRow);
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
@@ -172,7 +162,6 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
 AppSettings SettingsDialog::editedSettings() const {
     AppSettings edited;
     edited.hotkey = hotkeyEdit_->text().trimmed();
-    edited.displayMode = displayModeFromString(displayModeCombo_->currentData().toString());
     edited.starDictDir = QDir::fromNativeSeparators(starDictDirEdit_->text().trimmed());
     edited.tessdataDir = QDir::fromNativeSeparators(tessdataDirEdit_->text().trimmed());
     edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());
