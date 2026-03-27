@@ -52,6 +52,7 @@
 - [x] 新增“归一化结果含内部空白”失败链路用例：应直接判定为 `OCR_FAILED`，且不进入词典阶段。
 - [ ] 继续补齐其余异常链路组合测试（跨模块失败路径）。
   - [x] 新增“预处理结果为空”失败链路用例：应返回 `OCR_FAILED`，且不进入 OCR 识别阶段。
+  - [x] 新增“OCR 失败但未返回错误文案”失败链路用例：应回退到默认提示 `Ensure Tesseract is installed.`。
 - [x] 补齐 AI 降级断言（service 层）：
   - 功能关闭 -> `Disabled`；
   - 配置无效 -> `InvalidConfiguration`；
@@ -93,6 +94,7 @@
 - 2026-03-27：P2 新增 `LookupCoordinatorFixture` 测试夹具并在 `LookupCoordinatorTest` 复用，降低后续异常链路用例编写成本。
 - 2026-03-27：P2 新增“预处理结果为空”回归测试并修复 `LookupCoordinator`：预处理失败时直接 `OCR_FAILED` 且阻断 OCR 调用。
 - 2026-03-27：P2 将 AI 策略上下文从 `lookupFound` 升级为 `lookupStatus`，补齐 `DICT_UNAVAILABLE + AI 不可用` 的编排层断言。
+- 2026-03-27：P2 新增“识别失败且错误文案为空”回归测试，锁定默认降级提示文案行为。
 
 ## 4. 本轮完成后更新规则
 

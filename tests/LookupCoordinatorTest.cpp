@@ -13,6 +13,7 @@ private slots:
     void runReturnsOcrFailedWhenCaptureIsEmpty();
     void runReturnsOcrFailedWhenPreprocessImageIsEmpty();
     void runReturnsOcrFailedWhenRecognizerFails();
+    void runReturnsOcrFailedWithDefaultHintWhenRecognizerErrorMissing();
     void runReturnsOcrFailedWhenNormalizedCandidateIsEmpty();
     void runReturnsOcrFailedWhenNormalizedCandidateContainsWhitespace();
     void runTrimsNormalizedCandidateBeforeDictionaryLookup();
@@ -99,6 +100,28 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenRecognizerFails() {
     QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | engine unavailable"));
     QCOMPARE(result.cardTimeoutMs, 2600);
     QCOMPARE(result.trayTimeoutMs, 2200);
+    QVERIFY(!fixture.normalizeCalled);
+}
+
+void LookupCoordinatorTest::runReturnsOcrFailedWithDefaultHintWhenRecognizerErrorMissing() {
+    LookupCoordinatorFixture fixture;
+    fixture.ocrResult.success = false;
+    fixture.ocrError.clear();
+    LookupCoordinator coordinator = fixture.createCoordinator();
+
+    const LookupCoordinator::Result result =
+        coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::OcrFailed);
+    QCOMPARE(result.statusCode, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.queryWord, QString());
+    QCOMPARE(result.tooltipText, QStringLiteral("OCR_FAILED | Ensure Tesseract is installed."));
+    QCOMPARE(result.cardTitle, QStringLiteral("OCR_FAILED"));
+    QCOMPARE(result.cardBody, QStringLiteral("Ensure Tesseract is installed."));
+    QCOMPARE(result.trayMessage, QStringLiteral("OCR_FAILED | Ensure Tesseract is installed."));
+    QCOMPARE(result.cardTimeoutMs, 2600);
+    QCOMPARE(result.trayTimeoutMs, 2200);
+    QVERIFY(fixture.recognizeCalled);
     QVERIFY(!fixture.normalizeCalled);
 }
 
