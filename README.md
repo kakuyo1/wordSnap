@@ -56,6 +56,16 @@ cmake --build build
 
 运行产物通常位于 `build/` 目录。
 
+### 4.3 测试（按影响面执行）
+
+```powershell
+ctest --test-dir build --output-on-failure
+ctest --test-dir build -C Debug -L unit --output-on-failure
+ctest --test-dir build -C Debug -L integration --output-on-failure
+```
+
+测试策略与编写约束请同时参考：`TESTING_GUIDELINES.md`、`docs/TDD_CORE.md`、`docs/TDD_PLAN.md`。
+
 ## 5. 运行前准备
 
 ### 5.1 安装与配置 Tesseract
@@ -89,6 +99,7 @@ cmake --build build
 - `docs/PLAN.md`：可执行里程碑规划（已细化到验收标准）。
 - `docs/ARCHITECTURE.md`：项目整体架构与模块架构（Mermaid 图）。
 - `docs/requirements-status.md`：需求完成度对照。
+- `TESTING_GUIDELINES.md`：项目测试强约束（高价值、最小化、分层策略）。
 - `docs/TDD_CORE.md`：TDD 核心原则。
 - `docs/TDD_PLAN.md`：TDD 滚动执行计划与阶段进度。
 - `AGENTS.md`：面向编码 Agent 的协作规范。
@@ -126,7 +137,7 @@ wordSnapV1/
 
 ## 10. 路线图概览
 
-- 建立自动化测试与 TDD 基线（优先级最高）。
+- 按高价值测试策略持续补齐核心逻辑回归（遵循 `TESTING_GUIDELINES.md`）。
 - 完善 ResultCard 风格和状态规范，增加查询历史功能。
 - 接入 DeepSeek（异步加载、失败降级、结构化输出）。
 - 提升 OCR 在游戏/网页场景下的鲁棒性。

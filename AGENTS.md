@@ -13,7 +13,9 @@
 ## 1. 规则来源与优先级
 
 - 首要规则来源：本文件。
-- 已检查以下附加规则文件（当前均不存在）：
+- 已检查以下附加规则文件：
+  - `TESTING_GUIDELINES.md`（测试相关强约束，需与 `docs/TDD_CORE.md` 联合执行）
+- 以下附加规则文件当前不存在：
   - `.cursor/rules/`
   - `.cursorrules`
   - `.github/copilot-instructions.md`
@@ -38,7 +40,7 @@
 
 ## 4. Agent 标准工作流（建议）
 
-1. 先读需求、`docs/TDD_CORE.md`、`docs/TDD_PLAN.md` 与相关代码，再做最小改动方案。
+1. 先读需求、`TESTING_GUIDELINES.md`、`docs/TDD_CORE.md`、`docs/TDD_PLAN.md` 与相关代码，再做最小改动方案。
 2. 优先保持现有行为兼容，除非需求明确要求改行为。
 3. 先判断改动是否适合 TDD：适合则按 `Red -> Green -> Refactor`；不适合（如 UI 样式/展示细节）则记录理由并改走手工验证。
 4. 改代码后先构建，再做与影响面匹配的验证（自动化测试或手工验证）。
@@ -87,8 +89,14 @@ cmake --build build
 
 当前现状：
 
-- 已接入 CTest，当前已有 6 个测试 target（详见 `tests/`）。
-- TDD 核心原则见 `docs/TDD_CORE.md`，滚动实施计划见 `docs/TDD_PLAN.md`。
+- 已接入 CTest，当前已有 11 个测试 target（详见 `tests/`）。
+- 测试执行需同时遵循：`TESTING_GUIDELINES.md` + `docs/TDD_CORE.md` + `docs/TDD_PLAN.md`。
+- 测试新增策略（强约束）：
+  - 只写高价值测试，优先业务逻辑/公共 API/关键路径/边界 case；
+  - 避免 trivial 测试（getter/setter、简单赋值、纯 UI 样式 glue）；
+  - 优先单元测试，集成与回归保持精简（参考 80/15/5 金字塔）；
+  - 单函数测试用例建议 3-5 个，优先参数化/数据驱动减少重复；
+  - 以行为断言为主，不依赖实现细节。
 
 统一命令：
 
@@ -169,12 +177,10 @@ ctest --test-dir build -N
 
 以 `docs/PLAN.md` 为准，建议按以下顺序推进：
 
-1. M0：先补测试骨架与核心单测。
-2. M1：结果卡片风格、状态规范、历史查询。
-3. M2：DeepSeek 接入（异步 + 降级 + 输出约束）。
-4. M3：OCR 鲁棒性与全屏/热键冲突治理。
-5. M4/M5：打包发布、性能与稳定性收口。
-6. M6：跨平台可行性预研。
+1. M3：OCR 鲁棒性与全屏/热键冲突治理（当前主线）。
+2. M4：打包发布流水线收口。
+3. M5：性能与稳定性收口。
+4. M6：跨平台可行性预研。
 
 ## 10. 变更纪律
 

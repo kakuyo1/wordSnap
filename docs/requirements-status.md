@@ -31,6 +31,7 @@
 - 结果卡片主题实现已从 `ResultCardWidget` 抽离到 `src/ui/theme/` 模块，便于后续扩展与维护。
 - 新增 White paper 结果卡片风格：极简白纸基底、作业本横线、纸面纹理与柔和阴影高光（无卷角）。
 - 新增 TDD 文档与协作约束：`docs/TDD_CORE.md`（核心原则）与 `docs/TDD_PLAN.md`（滚动计划），并在 `AGENTS.md` 固化执行口径。
+- 新增 `TESTING_GUIDELINES.md` 作为测试强约束，并同步到 `AGENTS.md` / `TDD_CORE.md` / `TDD_PLAN.md` / `README.md` / `PLAN.md` 的测试执行口径。
 - CTest 测试支持按标签分层运行（`unit` / `integration`），并补充 `LookupCoordinatorTest` 关键失败分支覆盖。
 - `LookupCoordinator` 在归一化与结果展示链路增加空白防御：查词入参会使用去空白词，词典 `headword` 展示前会去空白，避免误判与文案异常。
 - 新增 `LookupCoordinatorTest` 异常组合回归用例，覆盖“归一化结果含空白”“词典 headword 含空白”两条链路。

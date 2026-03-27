@@ -3,7 +3,7 @@
 更新时间：2026-03-27
 
 > 本文件为动态执行计划：每次代码修改后都要同步更新状态。
-> 核心原则参照 `docs/TDD_CORE.md`，本文件负责“做什么、做到哪一步、下一步做什么”。
+> 核心原则参照 `docs/TDD_CORE.md`，测试细则参照 `TESTING_GUIDELINES.md`，本文件负责“做什么、做到哪一步、下一步做什么”。
 
 ## 1. 当前基线
 
@@ -21,6 +21,7 @@
   - `E2eSmokeTest`
 - 现状问题：
   - 分层标签已覆盖 `unit/integration/ui/e2e`，后续按风险增量补测，避免低价值测试膨胀。
+  - 新增测试需遵循“高价值 + 最小化”约束：单函数 3-5 case、优先参数化、避免 trivial 测试。
   - 主链路编排仍有边界路径覆盖不足。
   - UI 自动化目前为最小回归集，复杂交互覆盖仍可扩展。
   - 自 2026-03-27 起执行“先评估再 TDD”：UI/样式改动默认不强制自动化测试。
@@ -32,6 +33,7 @@
 - [x] 新建 `docs/TDD_CORE.md`，固化项目 TDD 核心原则。
 - [x] 新建 `docs/TDD_PLAN.md`，作为滚动执行面板。
 - [x] 在 `AGENTS.md` 明确“后续修改需遵循 TDD_CORE”。
+- [x] 将 `TESTING_GUIDELINES.md` 纳入测试强约束，并同步到测试相关文档。
 
 验收标准：文档可追踪、规则有唯一来源、Agent 协作口径一致。
 
@@ -145,6 +147,7 @@
 - 2026-03-27：P3 UI 调整（非 TDD）：按产品反馈撤回“颜色 + 字符位移帧”方案，恢复原始三点透明度 loading 动画；验证方式为本地构建通过与手工 UI 观察。
 - 2026-03-27：P3 UI 调整（非 TDD）：增强三点 loading 的跳跃感，活动点恢复“上浮+放大”效果，同时保持卡片几何稳定策略；验证方式为本地构建通过与手工 UI 观察。
 - 2026-03-27：按当前项目策略移除 GitHub Actions 工作流 `ci-unit-integration` 与 `nightly-ui-e2e-smoke`，并清理 `README` / `requirements-status` / `TDD_PLAN` 中相关说明。
+- 2026-03-27：新增 `TESTING_GUIDELINES.md` 并将其纳入测试执行强约束，同步更新 `AGENTS.md` / `TDD_CORE.md` / `README.md` / `PLAN.md` / `requirements-status.md`。
 
 ## 4. 本轮完成后更新规则
 
