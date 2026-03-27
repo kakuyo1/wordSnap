@@ -21,7 +21,7 @@
 - 结果卡片支持风格切换（Kraft paper / White paper / Glassmorphism / Terminal），并支持运行时应用。
 - 设置项新增 `ResultCardStyle` 与 `QueryHistoryLimit` 并持久化。
 - 新增查询历史 V1（JSONL 持久化、按词/时间过滤、快速复查、清空历史、最近 N 条裁剪）。
-- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest` / `AiAssistServiceTest` / `AiAssistPolicyTest`。
+- 建立 CTest 测试基线并纳入 `WordNormalizerTest` / `PhoneticExtractorTest` / `StarDictBackendTest` / `LookupCoordinatorTest` / `QueryHistoryServiceTest` / `AiAssistServiceTest` / `AiAssistPolicyTest` / `ResultCardWidgetTest`。
 - 接入 AI Assist（DeepSeek OpenAI-Compatible）：设置页新增 AI 配置，启动校验无效配置并自动降级。
 - 查词流程改为“两阶段渲染”：先展示基础词典结果，再异步请求 AI 并在卡片底部回填。
 - 设置页新增结果卡片持续时间（ms）配置，并持久化到本地设置。
@@ -40,6 +40,7 @@
 - `AiAssistPolicy` 上下文由布尔 `lookupFound` 升级为 `lookupStatus`，避免编排映射歧义；`AppController` 直接透传查词状态供策略决策。
 - 新增可复用测试夹具 `LookupCoordinatorFixture`（`tests/support/LookupCoordinatorFixture.h`），并在 `LookupCoordinatorTest` 复用默认样本与依赖桩，降低主链路异常用例维护成本。
 - `LookupCoordinator` 新增预处理空图防御：当预处理结果为空时直接返回 `OCR_FAILED`，并阻断后续 OCR 调用；对应回归测试已补齐。
+- 新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke 回归：覆盖结果卡片基础字段渲染与自动隐藏行为，确保关键窗口创建/显示/销毁主流程可回归验证。
 
 ## 未完成
 

@@ -15,6 +15,7 @@
   - `QueryHistoryServiceTest`
   - `AiAssistServiceTest`
   - `AiAssistPolicyTest`
+  - `ResultCardWidgetTest`
 - 现状问题：
   - 测试分层标签不完整（unit/integration/ui/e2e 未明确）。
   - 主链路编排仍有边界路径覆盖不足。
@@ -71,10 +72,10 @@
   - 新增 `tests/support/LookupCoordinatorFixture.h` 统一提供默认 OCR/归一化/词典样本与依赖桩；
   - `LookupCoordinatorTest` 关键分支改为复用该夹具，减少重复搭桩噪音。
 
-### P3（待开始）UI/行为自动化最小集
+### P3（进行中）UI/行为自动化最小集
 
 - [ ] 为 `ResultCardWidget` 增加关键行为测试（贴边回正、超时隐藏、内容扩展后回正）。
-- [ ] 建立最小 UI smoke 测试，确保关键窗口可创建与销毁。
+- [x] 建立最小 UI smoke 测试，确保关键窗口可创建与销毁。
 
 ### P4（待开始）CI 分层门禁
 
@@ -95,6 +96,7 @@
 - 2026-03-27：P2 新增“预处理结果为空”回归测试并修复 `LookupCoordinator`：预处理失败时直接 `OCR_FAILED` 且阻断 OCR 调用。
 - 2026-03-27：P2 将 AI 策略上下文从 `lookupFound` 升级为 `lookupStatus`，补齐 `DICT_UNAVAILABLE + AI 不可用` 的编排层断言。
 - 2026-03-27：P2 新增“识别失败且错误文案为空”回归测试，锁定默认降级提示文案行为。
+- 2026-03-27：启动 P3：新增 `ResultCardWidgetTest`（`ui` 标签）最小 smoke，用例覆盖窗口显示字段与自动隐藏基础行为。
 
 ## 4. 本轮完成后更新规则
 

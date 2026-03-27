@@ -12,6 +12,7 @@ function(add_wordsnap_test test_name test_label)
     target_link_libraries(${test_name} PRIVATE
         Qt6::Core
         Qt6::Gui
+        Qt6::Widgets
         Qt6::Test
         Qt6::Network
     )
@@ -54,4 +55,10 @@ add_wordsnap_test(AiAssistServiceTest unit
 add_wordsnap_test(AiAssistPolicyTest unit
     AiAssistPolicyTest.cpp
     ../src/app/AiAssistPolicy.cpp
+)
+
+add_wordsnap_test(ResultCardWidgetTest ui
+    ResultCardWidgetTest.cpp
+    ../src/ui/ResultCardWidget.cpp
+    ../src/ui/theme/ResultCardTheme.cpp
 )
