@@ -12,6 +12,8 @@ private slots:
     void runReturnsOcrFailedWhenCaptureIsEmpty();
     void runReturnsOcrFailedWhenRecognizerFails();
     void runReturnsOcrFailedWhenNormalizedCandidateIsEmpty();
+    void runTrimsNormalizedCandidateBeforeDictionaryLookup();
+    void runTrimsDictionaryHeadwordForDisplay();
     void runReturnsDictUnavailableWhenBackendIsNotReady();
     void runReturnsUnknownWhenDictionaryMissesWord();
     void runBuildsFoundResultAndExtractsInlinePhonetic();
@@ -172,6 +174,85 @@ void LookupCoordinatorTest::runReturnsOcrFailedWhenNormalizedCandidateIsEmpty() 
     QCOMPARE(result.cardTimeoutMs, 2200);
     QCOMPARE(result.trayTimeoutMs, 1700);
     QVERIFY(!dictionaryReadyCalled);
+}
+
+void LookupCoordinatorTest::runTrimsNormalizedCandidateBeforeDictionaryLookup() {
+    QString lookupWord;
+
+    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
+        [](const QRect&) {
+            return QImage(4, 4, QImage::Format_ARGB32);
+        },
+        [](const QImage& image) {
+            return image;
+        },
+        [](const QImage&, const QString&, QString*) {
+            OcrWordResult result;
+            result.success = true;
+            result.rawText = QStringLiteral("RUN");
+            return result;
+        },
+        [](const QString&) {
+            return QStringLiteral("  run  ");
+        },
+        []() {
+            return true;
+        },
+        [&](const QString& word) {
+            lookupWord = word;
+
+            DictionaryEntry entry;
+            if (word == QStringLiteral("run")) {
+                entry.found = true;
+                entry.headword = QStringLiteral("run");
+                entry.definitionsEn.push_back(QStringLiteral("to move fast"));
+            }
+            return entry;
+        },
+    });
+
+    const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(lookupWord, QStringLiteral("run"));
+    QCOMPARE(result.status, LookupCoordinator::Status::Found);
+    QCOMPARE(result.queryWord, QStringLiteral("run"));
+    QCOMPARE(result.cardTitle, QStringLiteral("run"));
+}
+
+void LookupCoordinatorTest::runTrimsDictionaryHeadwordForDisplay() {
+    LookupCoordinator coordinator(LookupCoordinator::Dependencies{
+        [](const QRect&) {
+            return QImage(4, 4, QImage::Format_ARGB32);
+        },
+        [](const QImage& image) {
+            return image;
+        },
+        [](const QImage&, const QString&, QString*) {
+            OcrWordResult result;
+            result.success = true;
+            result.rawText = QStringLiteral("run");
+            return result;
+        },
+        [](const QString&) {
+            return QStringLiteral("run");
+        },
+        []() {
+            return true;
+        },
+        [](const QString&) {
+            DictionaryEntry entry;
+            entry.found = true;
+            entry.headword = QStringLiteral("  run  ");
+            entry.definitionsEn.push_back(QStringLiteral("to move fast"));
+            return entry;
+        },
+    });
+
+    const LookupCoordinator::Result result = coordinator.run(QRect(0, 0, 20, 20), QString());
+
+    QCOMPARE(result.status, LookupCoordinator::Status::Found);
+    QCOMPARE(result.cardTitle, QStringLiteral("run"));
+    QCOMPARE(result.tooltipText, QStringLiteral("FOUND\nrun\nto move fast"));
 }
 
 void LookupCoordinatorTest::runReturnsDictUnavailableWhenBackendIsNotReady() {

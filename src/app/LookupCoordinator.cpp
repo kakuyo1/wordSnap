@@ -127,7 +127,7 @@ LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
             2200);
     }
 
-    ocrResult.normalizedText = dependencies_.normalizeCandidate(ocrResult.rawText);
+    ocrResult.normalizedText = dependencies_.normalizeCandidate(ocrResult.rawText).trimmed();
     if (ocrResult.normalizedText.isEmpty()) {
         return makeStatusResult(
             Status::OcrFailed,
@@ -156,7 +156,8 @@ LookupCoordinator::Result LookupCoordinator::run(const QRect& globalRect,
             1600);
     }
 
-    const QString headword = entry.headword.isEmpty() ? ocrResult.normalizedText : entry.headword;
+    const QString dictionaryHeadword = entry.headword.trimmed();
+    const QString headword = dictionaryHeadword.isEmpty() ? ocrResult.normalizedText : dictionaryHeadword;
     QString preview = pickDefinitionPreview(entry);
     QString phonetic = PhoneticExtractor::pickPrimaryPhonetic(entry);
 
