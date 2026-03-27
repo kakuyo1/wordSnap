@@ -18,9 +18,13 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <array>
 
 namespace {
 constexpr int kCardEdgeMargin = 8;
+constexpr int kCardAnchorOffsetX = 14;
+constexpr int kCardAnchorOffsetY = 18;
+constexpr int kRepositionAnimationMs = 160;
 
 QRect availableAreaForPoint(const QPoint& globalPos) {
     QScreen* screen = QGuiApplication::screenAt(globalPos);
@@ -56,14 +60,87 @@ QPoint clampTopLeftToArea(QPoint topLeft, const QSize& cardSize, const QRect& ar
     return topLeft;
 }
 
-void keepWidgetInsideCurrentScreen(QWidget* widget) {
+QPoint chooseBestCardPosition(const QPoint& anchorGlobalPos, const QSize& cardSize, const QRect& area) {
+    const QPoint preferred = anchorGlobalPos + QPoint(kCardAnchorOffsetX, kCardAnchorOffsetY);
+    const std::array<QPoint, 4> candidates{
+        preferred,
+        anchorGlobalPos + QPoint(-cardSize.width() - kCardAnchorOffsetX, kCardAnchorOffsetY),
+        anchorGlobalPos + QPoint(kCardAnchorOffsetX, -cardSize.height() - kCardAnchorOffsetY),
+        anchorGlobalPos + QPoint(-cardSize.width() - kCardAnchorOffsetX, -cardSize.height() - kCardAnchorOffsetY)
+    };
+
+    QPoint bestPosition = clampTopLeftToArea(candidates[0], cardSize, area);
+    int bestOverflowCost = std::abs(candidates[0].x() - bestPosition.x())
+                           + std::abs(candidates[0].y() - bestPosition.y());
+    int bestTravelCost = std::abs(bestPosition.x() - preferred.x())
+                         + std::abs(bestPosition.y() - preferred.y());
+
+    for (size_t i = 1; i < candidates.size(); ++i) {
+        const QPoint clamped = clampTopLeftToArea(candidates[i], cardSize, area);
+        const int overflowCost = std::abs(candidates[i].x() - clamped.x())
+                                 + std::abs(candidates[i].y() - clamped.y());
+        const int travelCost = std::abs(clamped.x() - preferred.x())
+                               + std::abs(clamped.y() - preferred.y());
+
+        if (overflowCost < bestOverflowCost
+            || (overflowCost == bestOverflowCost && travelCost < bestTravelCost)) {
+            bestPosition = clamped;
+            bestOverflowCost = overflowCost;
+            bestTravelCost = travelCost;
+        }
+    }
+
+    return bestPosition;
+}
+
+void moveWidgetWithBufferAnimation(QWidget* widget,
+                                   QPropertyAnimation* animation,
+                                   const QPoint& targetPos) {
+    if (widget == nullptr) {
+        return;
+    }
+
+    if (widget->pos() == targetPos) {
+        return;
+    }
+
+    if (animation == nullptr || !widget->isVisible()) {
+        widget->move(targetPos);
+        return;
+    }
+
+    animation->stop();
+    animation->setDuration(kRepositionAnimationMs);
+    animation->setEasingCurve(QEasingCurve::OutCubic);
+
+    const QPoint startPos = widget->pos();
+    const QPoint delta = targetPos - startPos;
+    const QPoint settlePos(
+        targetPos.x() + (delta.x() == 0 ? 0 : (delta.x() > 0 ? 4 : -4)),
+        targetPos.y() + (delta.y() == 0 ? 0 : (delta.y() > 0 ? 4 : -4)));
+
+    animation->setStartValue(startPos);
+    animation->setKeyValueAt(0.82, settlePos);
+    animation->setEndValue(targetPos);
+    animation->start();
+}
+
+void keepWidgetInsideCurrentScreen(QWidget* widget,
+                                   QPropertyAnimation* animation,
+                                   const bool useBufferAnimation) {
     if (widget == nullptr) {
         return;
     }
 
     const QRect area = availableAreaForPoint(widget->frameGeometry().center());
     const QPoint clampedPos = clampTopLeftToArea(widget->pos(), widget->size(), area);
-    if (clampedPos != widget->pos()) {
+    if (clampedPos == widget->pos()) {
+        return;
+    }
+
+    if (useBufferAnimation) {
+        moveWidgetWithBufferAnimation(widget, animation, clampedPos);
+    } else {
         widget->move(clampedPos);
     }
 }
@@ -337,13 +414,11 @@ void ResultCardWidget::showMessage(const QString& statusCode,
 
     const QRect area = availableAreaForPoint(anchorGlobalPos);
 
-    QPoint target = anchorGlobalPos + QPoint(14, 18);
-    if (target.y() + height() > area.bottom() - kCardEdgeMargin) {
-        target.setY(anchorGlobalPos.y() - height() - 18);
-    }
-    target = clampTopLeftToArea(target, size(), area);
+    const QPoint target = chooseBestCardPosition(anchorGlobalPos, size(), area);
 
-    const QPoint popStart = target + QPoint(0, 9);
+    const int startXOffset = target.x() < anchorGlobalPos.x() ? -6 : 6;
+    const int startYOffset = target.y() < anchorGlobalPos.y() ? -8 : 8;
+    const QPoint popStart = target + QPoint(startXOffset, startYOffset);
     move(popStart);
 
     if (fadeInAnimation_ != nullptr) {
@@ -429,7 +504,7 @@ void ResultCardWidget::showAiText(const QString& text, const int autoHideMs) {
     aiLabel_->setText(text.trimmed());
     aiLabel_->show();
     adjustSize();
-    keepWidgetInsideCurrentScreen(this);
+    keepWidgetInsideCurrentScreen(this, popInAnimation_, true);
 
     if (autoHideTimer_ == nullptr) {
         return;
@@ -449,7 +524,7 @@ void ResultCardWidget::updateAiLoadingFrame() {
     ++aiLoadingFrame_;
     aiLabel_->setText(buildAiLoadingGridHtml(aiLoadingFrame_, cardStyle_));
     adjustSize();
-    keepWidgetInsideCurrentScreen(this);
+    keepWidgetInsideCurrentScreen(this, popInAnimation_, false);
 }
 
 void ResultCardWidget::onAutoHideTimeout() {
