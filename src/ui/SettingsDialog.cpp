@@ -30,6 +30,7 @@ QString startDirectoryFromText(const QString& text) {
 SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* parent)
     : QDialog(parent),
       hotkeyEdit_(new QLineEdit(this)),
+      launchOnStartupCheckBox_(new QCheckBox(this)),
       starDictDirEdit_(new QLineEdit(this)),
       tessdataDirEdit_(new QLineEdit(this)),
       resultCardStyleCombo_(new QComboBox(this)),
@@ -49,6 +50,8 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     hotkeyEdit_->setText(initialSettings.hotkey);
     hotkeyEdit_->setPlaceholderText(QStringLiteral("Shift+Alt+S"));
     hotkeyEdit_->setClearButtonEnabled(true);
+
+    launchOnStartupCheckBox_->setChecked(initialSettings.launchOnStartup);
 
     resultCardStyleCombo_->addItem(QStringLiteral("Kraft paper"), QStringLiteral("kraft_paper"));
     resultCardStyleCombo_->addItem(QStringLiteral("White paper"), QStringLiteral("white_paper"));
@@ -124,6 +127,7 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
     opacityLayout->addWidget(resultCardOpacityValueLabel_);
 
     formLayout->addRow(QStringLiteral("Hotkey"), hotkeyEdit_);
+    formLayout->addRow(QStringLiteral("Launch on Windows startup"), launchOnStartupCheckBox_);
     formLayout->addRow(QStringLiteral("Result card style"), resultCardStyleCombo_);
     formLayout->addRow(QStringLiteral("StarDict folder"), starDictDirRow);
     formLayout->addRow(QStringLiteral("Tessdata folder"), tessdataDirRow);
@@ -162,6 +166,7 @@ SettingsDialog::SettingsDialog(const AppSettings& initialSettings, QWidget* pare
 AppSettings SettingsDialog::editedSettings() const {
     AppSettings edited;
     edited.hotkey = hotkeyEdit_->text().trimmed();
+    edited.launchOnStartup = launchOnStartupCheckBox_->isChecked();
     edited.starDictDir = QDir::fromNativeSeparators(starDictDirEdit_->text().trimmed());
     edited.tessdataDir = QDir::fromNativeSeparators(tessdataDirEdit_->text().trimmed());
     edited.resultCardOpacityPercent = clampResultCardOpacityPercent(resultCardOpacitySlider_->value());

@@ -68,6 +68,11 @@ add_wordsnap_test(OcrServiceTest unit
     ../src/services/TesseractExecutableResolver.cpp
 )
 
+add_wordsnap_test(SettingsServiceTest unit
+    SettingsServiceTest.cpp
+    ../src/services/SettingsService.cpp
+)
+
 add_wordsnap_test(ResultCardWidgetTest ui
     ResultCardWidgetTest.cpp
     ../src/ui/ResultCardWidget.cpp

@@ -95,6 +95,7 @@ struct AiAssistContent {
 // Application-level persistent settings.
 struct AppSettings {
     QString hotkey{QStringLiteral("Shift+Alt+S")};
+    bool launchOnStartup{false};
     QString starDictDir;
     QString tessdataDir;
     int resultCardOpacityPercent{92};

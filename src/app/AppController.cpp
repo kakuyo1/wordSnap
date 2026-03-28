@@ -11,6 +11,7 @@
 #include "app/LookupCoordinator.h"
 #include "services/AiAssistService.h"
 #include "platform/win/GlobalHotkeyManager.h"
+#include "platform/win/StartupLaunchManager.h"
 #include "services/DictionaryService.h"
 #include "services/ImagePreprocessor.h"
 #include "services/OcrService.h"
@@ -62,6 +63,7 @@ AppController::AppController(QObject* parent)
       dictionaryService_(std::make_unique<DictionaryService>()),
       resultCardWidget_(std::make_unique<ResultCardWidget>()),
       aiAssistService_(std::make_unique<AiAssistService>()),
+      startupLaunchManager_(std::make_unique<StartupLaunchManager>()),
       lookupCoordinator_(std::make_unique<LookupCoordinator>(LookupCoordinator::Dependencies{
           [this](const QRect& rect) {
               return screenCaptureService_->capture(rect);
@@ -98,6 +100,15 @@ bool AppController::initialize(QString* warningMessage) {
     }
 
     settings_ = settingsService_->load();
+
+    if (startupLaunchManager_ != nullptr) {
+        QString startupError;
+        if (!startupLaunchManager_->setLaunchOnStartupEnabled(settings_.launchOnStartup, &startupError)) {
+            appendWarningMessage(
+                warningMessage,
+                QStringLiteral("Launch on startup setting was not applied: %1").arg(startupError));
+        }
+    }
 
     connect(trayController_.get(), &TrayController::captureRequested, this, &AppController::onHotkeyPressed);
     connect(trayController_.get(), &TrayController::historyRequested, this, &AppController::onHistoryRequested);
@@ -357,6 +368,23 @@ void AppController::onSettingsRequested() {
             appendWarningMessage(
                 &warningMessage,
                 QStringLiteral("Hotkey was not updated: %1").arg(hotkeyError));
+        }
+    }
+
+    if (requestedSettings.launchOnStartup != settings_.launchOnStartup) {
+        if (startupLaunchManager_ == nullptr) {
+            appendWarningMessage(
+                &warningMessage,
+                QStringLiteral("Launch on startup was not updated: startup manager is unavailable."));
+        } else {
+            QString startupError;
+            if (startupLaunchManager_->setLaunchOnStartupEnabled(requestedSettings.launchOnStartup, &startupError)) {
+                updatedSettings.launchOnStartup = requestedSettings.launchOnStartup;
+            } else {
+                appendWarningMessage(
+                    &warningMessage,
+                    QStringLiteral("Launch on startup was not updated: %1").arg(startupError));
+            }
         }
     }
 

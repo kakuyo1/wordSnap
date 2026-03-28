@@ -28,6 +28,8 @@ qt_add_executable(wordSnapV1 WIN32
     src/app/AppTypes.h
     src/platform/win/GlobalHotkeyManager.h
     src/platform/win/GlobalHotkeyManager.cpp
+    src/platform/win/StartupLaunchManager.h
+    src/platform/win/StartupLaunchManager.cpp
     src/services/ScreenCaptureService.h
     src/services/ScreenCaptureService.cpp
     src/services/DictionaryService.h

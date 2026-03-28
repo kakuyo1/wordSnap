@@ -21,6 +21,7 @@ class SettingsService;
 class LookupCoordinator;
 class QueryHistoryService;
 class AiAssistService;
+class StartupLaunchManager;
 
 // Coordinates startup and top-level flow between infrastructure modules.
 class AppController final : public QObject {
@@ -63,5 +64,6 @@ private:
     std::unique_ptr<ResultCardWidget> resultCardWidget_;
     std::unique_ptr<LookupCoordinator> lookupCoordinator_;
     std::unique_ptr<AiAssistService> aiAssistService_;
+    std::unique_ptr<StartupLaunchManager> startupLaunchManager_;
     int activeLookupToken_{0};
 };

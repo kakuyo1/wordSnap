@@ -8,6 +8,7 @@
  * @details
  * [General]
  * Hotkey=
+ * LaunchOnStartup=
  * StarDictDir=
  * TessdataDir=
  * ResultCardOpacity=
@@ -23,6 +24,7 @@
 namespace {
 constexpr auto kSettingsGroupGeneral = "general";
 constexpr auto kKeyHotkey = "hotkey";
+constexpr auto kKeyLaunchOnStartup = "launch_on_startup";
 constexpr auto kKeyStarDictDir = "stardict_dir";
 constexpr auto kKeyTessdataDir = "tessdata_dir";
 constexpr auto kKeyResultCardOpacity = "result_card_opacity";
@@ -52,6 +54,12 @@ AppSettings SettingsService::load() const {
     if (result.hotkey.isEmpty()) {
         result.hotkey = AppSettings{}.hotkey;
     }
+
+    result.launchOnStartup = settings
+                                 .value(
+                                     QString::fromLatin1(kKeyLaunchOnStartup),
+                                     result.launchOnStartup)
+                                 .toBool();
 
     const QString defaultStarDictDir = QCoreApplication::applicationDirPath() + QStringLiteral("/dict");
     result.starDictDir = settings.value(QString::fromLatin1(kKeyStarDictDir), defaultStarDictDir).toString().trimmed();
@@ -137,6 +145,9 @@ void SettingsService::save(const AppSettings& appSettings) const {
     settings.beginGroup(QString::fromLatin1(kSettingsGroupGeneral));
 
     settings.setValue(QString::fromLatin1(kKeyHotkey), appSettings.hotkey);
+    settings.setValue(
+        QString::fromLatin1(kKeyLaunchOnStartup),
+        appSettings.launchOnStartup);
     settings.setValue(QString::fromLatin1(kKeyStarDictDir), appSettings.starDictDir);
     settings.setValue(QString::fromLatin1(kKeyTessdataDir), appSettings.tessdataDir);
     settings.setValue(
