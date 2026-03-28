@@ -57,8 +57,8 @@
 - 启动 M3-A 样本基线建设：新增 `docs/Temp/M3-样本清单模板.md` 与 `docs/Temp/M3-基线评估记录-20260327.md`，统一 30 条样本池与评分口径。
 - 已完成 `M3A-WEB-01~08` 手工识别验证：样本均可快速识别成功，M3 本轮迭代按当前需求先收口。
 - 新增 `docs/FUTURE.md` 承接 M3 后续候选项与后续里程碑候选，避免主计划文档膨胀。
-- 新增 Windows 打包脚本 `scripts/release/windows/package-win.ps1`：支持构建、可选测试、`windeployqt` 部署、Inno Setup 打包与 SHA256 产物生成。
-- 新增 GitHub Release 发布脚本 `scripts/release/windows/publish-release.ps1`：支持交互输入版本/标题/说明（回车走默认），并上传安装包与校验文件到 Release notes。
+- 新增 Windows 打包脚本 `scripts/release/windows/package-win.ps1`：默认仅打包程序本体与 Qt 运行时（不执行测试、不拷贝可选资源），支持按需开启测试/附加资源，完成后自动清理 `staging` 临时目录。
+- 新增 GitHub Release 发布脚本 `scripts/release/windows/publish-release.ps1`：支持交互输入版本/标题/说明（回车走默认），并上传安装包与校验文件到 Release notes；已兼容“目标 release 尚不存在”场景。
 - 新增 Inno Setup 安装器脚本 `installer/windows/wordSnapV1.iss` 初版，支持按 `SourceDir/OutputDir/AppVersion` 参数化构建安装包。
 
 ## 未完成

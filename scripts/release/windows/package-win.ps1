@@ -6,9 +6,13 @@ param(
     [ValidateSet("Debug", "Release", "RelWithDebInfo", "MinSizeRel")]
     [string]$Config = "Release",
 
-    [switch]$SkipTests,
+    [switch]$RunTests,
+
+    [switch]$IncludeOptionalAssets,
 
     [switch]$Clean,
+
+    [switch]$KeepStaging,
 
     [string]$RepoRoot
 )
@@ -131,6 +135,11 @@ if ($Clean -and (Test-Path -LiteralPath $distRoot)) {
     Remove-Item -LiteralPath $distRoot -Recurse -Force
 }
 
+if (Test-Path -LiteralPath $stagingDir) {
+    Write-Step "Resetting staging directory"
+    Remove-Item -LiteralPath $stagingDir -Recurse -Force
+}
+
 New-Item -ItemType Directory -Path $distRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
 
@@ -143,7 +152,7 @@ $iscc = Resolve-Executable -Candidates @(
 ) -DisplayName "ISCC.exe"
 
 $ctest = $null
-if (-not $SkipTests) {
+if ($RunTests) {
     $ctest = Resolve-Executable -Candidates @("ctest.exe", "ctest") -DisplayName "ctest"
 }
 
@@ -154,7 +163,7 @@ if (-not (Test-Path -LiteralPath $installerScript)) {
 Invoke-External -FilePath $cmake -Arguments @("-S", $repoRootPath, "-B", $buildDir) -StepName "Configuring CMake"
 Invoke-External -FilePath $cmake -Arguments @("--build", $buildDir, "--config", $Config) -StepName "Building project"
 
-if (-not $SkipTests) {
+if ($RunTests) {
     Invoke-External -FilePath $ctest -Arguments @("--test-dir", $buildDir, "-C", $Config, "--output-on-failure") -StepName "Running tests"
 }
 
@@ -162,9 +171,13 @@ $builtExePath = Resolve-BuiltExecutablePath -BuildDir $buildDir -BuildConfig $Co
 Write-Step "Copying executable to staging"
 Copy-Item -LiteralPath $builtExePath -Destination $stagingExe -Force
 
-Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "dict" -DestinationRoot $stagingDir
-Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "tessdata" -DestinationRoot $stagingDir
-Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "static" -DestinationRoot $stagingDir
+if ($IncludeOptionalAssets) {
+    Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "dict" -DestinationRoot $stagingDir
+    Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "tessdata" -DestinationRoot $stagingDir
+    Copy-OptionalDirectory -SourceRoot $repoRootPath -Name "static" -DestinationRoot $stagingDir
+} else {
+    Write-Step "Skipping optional assets (dict/tessdata/static)"
+}
 
 $deployArgs = @("--dir", $stagingDir)
 if ($Config -eq "Debug") {
@@ -192,6 +205,11 @@ if (-not (Test-Path -LiteralPath $installerOutputPath)) {
 
 $hash = (Get-FileHash -LiteralPath $installerOutputPath -Algorithm SHA256).Hash.ToLowerInvariant()
 Set-Content -LiteralPath $shaPath -Encoding ascii -Value "$hash *$outputBaseName.exe"
+
+if (-not $KeepStaging -and (Test-Path -LiteralPath $stagingDir)) {
+    Write-Step "Cleaning staging directory"
+    Remove-Item -LiteralPath $stagingDir -Recurse -Force
+}
 
 Write-Host ""
 Write-Host "[M4] Packaging completed." -ForegroundColor Green

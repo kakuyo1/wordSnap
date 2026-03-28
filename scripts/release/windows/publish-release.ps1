@@ -183,11 +183,6 @@ if ($DryRun) {
 
 Invoke-External -FilePath $gh -Arguments @("auth", "status") -StepName "Checking gh authentication"
 
-$releaseCheck = & $gh release view $tag --repo $Repo --json url -q .url 2>$null
-if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($releaseCheck)) {
-    Fail "Release already exists for tag ${tag}: $releaseCheck"
-}
-
 $createArgs = @(
     "release",
     "create",
