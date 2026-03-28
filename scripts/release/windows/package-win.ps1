@@ -116,30 +116,6 @@ function Copy-OptionalDirectory {
     }
 }
 
-function Get-PngDimensions {
-    param([byte[]]$PngBytes)
-
-    if ($PngBytes.Length -lt 24) {
-        Fail "PNG file is too short to read dimensions"
-    }
-
-    $signature = [byte[]](137, 80, 78, 71, 13, 10, 26, 10)
-    for ($i = 0; $i -lt $signature.Length; $i++) {
-        if ($PngBytes[$i] -ne $signature[$i]) {
-            Fail "Icon source is not a valid PNG file"
-        }
-    }
-
-    $width = (($PngBytes[16] -shl 24) -bor ($PngBytes[17] -shl 16) -bor ($PngBytes[18] -shl 8) -bor $PngBytes[19])
-    $height = (($PngBytes[20] -shl 24) -bor ($PngBytes[21] -shl 16) -bor ($PngBytes[22] -shl 8) -bor $PngBytes[23])
-
-    if ($width -le 0 -or $height -le 0) {
-        Fail "PNG dimensions are invalid"
-    }
-
-    return @{ Width = [int]$width; Height = [int]$height }
-}
-
 function Convert-PngToIco {
     param(
         [string]$PngPath,
@@ -150,10 +126,56 @@ function Convert-PngToIco {
         Fail "Icon source PNG not found: $PngPath"
     }
 
-    $pngBytes = [System.IO.File]::ReadAllBytes($PngPath)
-    $dimensions = Get-PngDimensions -PngBytes $pngBytes
-    $widthByte = if ($dimensions.Width -ge 256) { [byte]0 } else { [byte]$dimensions.Width }
-    $heightByte = if ($dimensions.Height -ge 256) { [byte]0 } else { [byte]$dimensions.Height }
+    Add-Type -AssemblyName System.Drawing
+
+    $sourceImage = $null
+    $resizedBitmap = $null
+    $graphics = $null
+    $pngStream = $null
+
+    try {
+        $sourceImage = [System.Drawing.Image]::FromFile($PngPath)
+
+        $targetSize = 256
+        $resizedBitmap = New-Object System.Drawing.Bitmap($targetSize, $targetSize, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $graphics = [System.Drawing.Graphics]::FromImage($resizedBitmap)
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+        $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+
+        $scale = [Math]::Min($targetSize / $sourceImage.Width, $targetSize / $sourceImage.Height)
+        $drawWidth = [int][Math]::Round($sourceImage.Width * $scale)
+        $drawHeight = [int][Math]::Round($sourceImage.Height * $scale)
+        $drawX = [int][Math]::Floor(($targetSize - $drawWidth) / 2)
+        $drawY = [int][Math]::Floor(($targetSize - $drawHeight) / 2)
+        $graphics.DrawImage($sourceImage, $drawX, $drawY, $drawWidth, $drawHeight)
+
+        $pngStream = New-Object System.IO.MemoryStream
+        $resizedBitmap.Save($pngStream, [System.Drawing.Imaging.ImageFormat]::Png)
+        $pngBytes = $pngStream.ToArray()
+    } finally {
+        if ($graphics -ne $null) {
+            $graphics.Dispose()
+        }
+        if ($resizedBitmap -ne $null) {
+            $resizedBitmap.Dispose()
+        }
+        if ($sourceImage -ne $null) {
+            $sourceImage.Dispose()
+        }
+        if ($pngStream -ne $null) {
+            $pngStream.Dispose()
+        }
+    }
+
+    if ($pngBytes.Length -eq 0) {
+        Fail "Failed to generate icon PNG bytes"
+    }
+
+    $widthByte = [byte]0
+    $heightByte = [byte]0
 
     $iconDirectory = Split-Path -Parent $IcoPath
     if (-not [string]::IsNullOrWhiteSpace($iconDirectory)) {
@@ -228,7 +250,7 @@ if (-not (Test-Path -LiteralPath $installerScript)) {
 }
 
 Invoke-External -FilePath $cmake -Arguments @("-S", $repoRootPath, "-B", $buildDir) -StepName "Configuring CMake"
-Invoke-External -FilePath $cmake -Arguments @("--build", $buildDir, "--config", $Config) -StepName "Building project"
+Invoke-External -FilePath $cmake -Arguments @("--build", $buildDir, "--config", $Config, "--target", "wordSnapV1") -StepName "Building project"
 
 if ($RunTests) {
     Invoke-External -FilePath $ctest -Arguments @("--test-dir", $buildDir, "-C", $Config, "--output-on-failure") -StepName "Running tests"
