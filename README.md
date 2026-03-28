@@ -142,6 +142,6 @@ wordSnapV1/
 - 完善 ResultCard 风格和状态规范，增加查询历史功能。
 - 接入 DeepSeek（异步加载、失败降级、结构化输出）。
 - OCR 鲁棒性本轮按当前需求已收口，后续增强项见 `docs/FUTURE.md`。
-- 打通 `windeployqt + Inno Setup` 发布流程。
+- 已完成 `windeployqt + Inno Setup` 本地打包与 GitHub Release 发布脚本闭环。
 
 详细计划请查看：`docs/PLAN.md`。

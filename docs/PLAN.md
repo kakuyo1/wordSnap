@@ -20,7 +20,6 @@
 
 当前待推进重心：
 
-- M4：Windows 打包与发布流程固化。
 - M5：长期运行稳定性与性能收口。
 - M6：跨平台可行性预研。
 
@@ -32,7 +31,7 @@
 | M1 结果体验与状态规范 | 已完成 | UI 体验与状态可预测 | 卡片风格、状态机、历史查询已上线 |
 | M2 AI 辅助解释 | 已完成 | 可控引入 AI 增强 | 两阶段渲染、配置校验、失败降级已闭环 |
 | M3 OCR 鲁棒性与实战适配 | 已收口（当前需求） | 提高复杂场景可用率 | `M3A-WEB-01~08` 手工验证均快速识别成功，后续候选转入 `docs/FUTURE.md` |
-| M4 打包与发布流水线 | 进行中 | 形成可分发安装包 | 已落地打包/发布脚本与安装器初版，待端到端验收 |
+| M4 打包与发布流水线 | 已完成 | 形成可分发安装包 | 打包脚本、发布脚本、安装器与图标统一已完成并通过端到端打包验收 |
 | M5 稳定性与性能收口 | 待开始 | 支撑长期后台运行 | 指标采样、泄漏治理、生命周期治理待系统化 |
 | M6 跨平台可行性预研 | 待开始 | 输出 Go/No-Go 结论 | 需先完成平台层抽象与最小 PoC |
 
@@ -52,38 +51,26 @@
 
 - M3 进一步优化（候选筛选、全屏冲突治理、全量基线补测）已转入 `docs/FUTURE.md`，待实际反馈触发再启用。
 
-### M4：Windows 打包与发布流水线
+### M4：Windows 打包与发布流水线（已完成）
 
 目标：从“开发机可跑”升级为“目标用户可安装可用”。
 
-关键任务：
+本轮完成：
 
-- 一键打包安装脚本（构建 + `windeployqt` + Inno Setup安装包生成）。
-
-- 发布说明写入 GitHub Release notes（版本号、变更摘要、校验信息）。
-
-- gh 上传脚本（上传安装包到https://github.com/kakuyo1/wordSnap的Release）
-
-  ```
-  首先让用户输入<version-num>，比如1.0.0，接着提示用户输入title和notes，若用户直接回车则使用默认信息：
-  gh release create V<version-num> `
-     -R kakuyo1/wordSnap `
-     --title "wordSnap <version-num>" `
-     --notes "Release notes for version <version-num>" `
-     --latest
-     
-  然后继续后续的脚本代码上传安装包到对应位置
-  ```
-
-注意事项：
-
-- 任何需要用到图标的内容，比如软件桌面快捷方式图标、托盘图标、安装包图标等，都默认使用 `static/icons/wordSnapLogo.png`
-- 版本号默认从 1.0.0 开始
+- 已新增 `scripts/release/windows/package-win.ps1`，支持一键执行构建 + `windeployqt` + Inno Setup 打包。
+- 已新增 `scripts/release/windows/publish-release.ps1`，支持交互输入版本/标题/说明并上传安装包与校验文件。
+- 已新增 `installer/windows/wordSnapV1.iss` 并完成参数化（`SourceDir`、`OutputDir`、`AppVersion`、`SetupIconFile`）。
+- 已统一托盘图标、应用图标、安装器图标与快捷方式图标来源为 `static/icons/wordSnapLogo.png`。
+- 已完成端到端验证：`package-win.ps1 -Version 1.0.0 -Clean` 成功产出安装包与 SHA256。
 
 验收门槛：
 
 - 新环境可一键安装并完成一次完整查词。
 - 卸载行为符合预期（主程序清理，用户数据按策略保留）。
+
+当前结论：
+
+- M4 已按当前范围收口，后续仅保留增量优化项（见 `docs/FUTURE.md`）。
 
 ### M5：稳定性与性能收口
 
@@ -122,8 +109,8 @@
 - 能回退：关键行为变更具备降级策略或兼容方案。
 - 能同步：`README.md`、`docs/`、`AGENTS.md`（若受影响）同步更新。
 
-## 6. 下一迭代建议（M4 优先）
+## 6. 下一迭代建议（M5 优先）
 
-1. 推进 M4：完成安装器脚本端到端打包验收与 Release 发布演练。
+1. 启动 M5：补齐内存/句柄与关键耗时采样，建立 2 小时稳定性回归基线。
 2. 保持现有 OCR 主链路稳定，收集真实使用反馈作为 `docs/FUTURE.md` 触发依据。
 3. 若出现高频 OCR 失败场景，再按 `docs/FUTURE.md` 优先级恢复 M3 候选项。
