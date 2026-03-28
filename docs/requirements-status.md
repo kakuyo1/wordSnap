@@ -60,6 +60,7 @@
 - 新增 Windows 打包脚本 `scripts/release/windows/package-win.ps1`：默认仅打包程序本体与 Qt 运行时（不执行测试、不拷贝可选资源），支持按需开启测试/附加资源，完成后自动清理 `staging` 临时目录。
 - 新增 GitHub Release 发布脚本 `scripts/release/windows/publish-release.ps1`：支持交互输入版本/标题/说明（回车走默认），并上传安装包与校验文件到 Release notes；已兼容“目标 release 尚不存在”场景。
 - 新增 Inno Setup 安装器脚本 `installer/windows/wordSnapV1.iss` 初版，支持按 `SourceDir/OutputDir/AppVersion` 参数化构建安装包。
+- 图标统一到 `static/icons/wordSnapLogo.png`：托盘图标与应用窗口图标改为 Qt 资源加载；打包脚本会基于该 PNG 生成 `wordSnapLogo.ico` 并注入安装器与桌面/开始菜单快捷方式图标。
 
 ## 未完成
 

@@ -2,6 +2,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QIcon>
 #include <QMenu>
 #include <QStyle>
 #include <QSystemTrayIcon>
@@ -14,7 +15,10 @@ TrayController::TrayController(QObject* parent)
       historyAction_(trayMenu_->addAction(QStringLiteral("History"))),
       settingsAction_(trayMenu_->addAction(QStringLiteral("Settings"))),
       quitAction_(trayMenu_->addAction(QStringLiteral("Exit"))) {
-    QIcon trayIcon = QIcon::fromTheme(QStringLiteral("accessories-dictionary"));
+    QIcon trayIcon(QStringLiteral(":/icons/wordSnapLogo.png"));
+    if (trayIcon.isNull()) {
+        trayIcon = QIcon::fromTheme(QStringLiteral("accessories-dictionary"));
+    }
     if (trayIcon.isNull()) {
         trayIcon = QApplication::style()->standardIcon(QStyle::SP_FileDialogInfoView);
     }

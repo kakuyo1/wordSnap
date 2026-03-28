@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
+#include <QIcon>
 #include <QLockFile>
 
 #include "app/AppController.h"
@@ -12,6 +13,7 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("wordSnap"));
     QCoreApplication::setApplicationName(QStringLiteral("wordSnapV1"));
+    QApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/wordSnapLogo.png")));
     QApplication::setQuitOnLastWindowClosed(false);
 
     QLockFile singleInstanceLock(QDir::tempPath() + QStringLiteral("/wordSnapV1.lock"));

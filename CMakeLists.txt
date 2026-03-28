@@ -18,6 +18,7 @@ qt_standard_project_setup()
 
 qt_add_executable(wordSnapV1 WIN32
     src/main.cpp
+    src/resources/wordSnap.qrc
     src/app/AppController.h
     src/app/AppController.cpp
     src/app/AiAssistPolicy.h
