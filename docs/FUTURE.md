@@ -1,6 +1,6 @@
 # wordSnapV1 候选事项池（FUTURE）
 
-更新时间：2026-03-27
+更新时间：2026-03-28
 
 > 本文件用于承接“当前不阻断需求、但有长期价值”的候选事项。
 > 进入实现前，仍需按 `docs/TDD_CORE.md` 与 `docs/TDD_PLAN.md` 评估是否采用 TDD。
@@ -59,7 +59,7 @@
 
 ### F6：M4 Windows 打包与发布流水线
 
-- 一键打包（构建 + `windeployqt` + 安装包）与发布清单模板。
+- 一键打包（构建 + `windeployqt` + 安装包）与 Release notes 发布规范。
 
 ### F7：M5 稳定性与性能收口
 
